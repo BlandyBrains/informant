@@ -1,0 +1,65 @@
+[package]
+name = "meta"
+version = "0.1.0"
+authors = ["BlandyBrains <NothingsBland@proton.me>"]
+edition = "2021"
+
+[lib]
+name = "meta"
+path = "src/lib.rs"
+
+[features]
+default = [
+    "ape", 
+    "id3",
+    "exif",
+    "hash",
+    "image",
+    "mp4",
+    "matroska",
+    "heic"
+]
+image = [
+    "dep:image",
+]
+hash = [
+    "dep:img_hash"
+]
+exif = [
+    "dep:kamadak-exif"
+]
+heic = [
+    "dep:libheif-rs"
+]
+mp4 = [
+    "dep:mp4"
+]
+matroska = [
+    "dep:matroska"
+]
+ape = [
+    "dep:ape"
+]
+id3 = [
+    "dep:id3"
+]
+
+[dependencies]
+thiserror = { version = "1.0"}
+log = { version = "0.4.17" }
+regex = { version = "1.7.1" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.89" }
+
+kamadak-exif = { version = "0.5.4", optional = true }
+mp4 = { version = "0.12.0", optional = true }
+matroska = { version = "0.25.0", optional = true }
+id3 = { version = "1.5.0", optional = true }
+ape = { version = "0.4.0", optional = true }
+libheif-rs = { version = "0.15.1", optional = true }
+image = { version = "0.23.14", optional = true }
+img_hash = { version = "3.2.0", optional = true  }
+
+[dev-dependencies]
+chrono = { version = "0.4.23" }
+walkdir = { version = "2.3.3" }
