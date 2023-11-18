@@ -45,8 +45,6 @@ id3 = [
 ]
 
 [dependencies]
-thiserror = { version = "1.0"}
-log = { version = "0.4.17" }
 regex = { version = "1.7.1" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.89" }

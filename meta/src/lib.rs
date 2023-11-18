@@ -1,281 +1,239 @@
+use std::fmt;
+use std::path::Path;
+
 // Common meta objects
 mod meta;
-mod error;
-mod types;
+mod image;
+
+use image::CommonImageMeta;
+
+pub use crate::meta::{MetaClass, MetaAttribute, MetaValue, MetaFormat, MetaSource, MetaType};
+
+type MetaError = Box<dyn std::error::Error + 'static>;
+
+#[derive(Debug, Clone)]
+struct NoExtractorError {
+    message: String,
+}
+
+// Implement the std::fmt::Display trait for the error type
+impl fmt::Display for NoExtractorError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+impl std::error::Error for NoExtractorError {}
+
+/// Fundamental trait for extracting metadata.
+trait Extractor{
+    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), MetaError>;
+}
+
+trait Detail {
+    fn new(file_path: &str) -> Self;
+}
 
 #[cfg(feature="heic")]
 mod heic;
-#[cfg(feature="heic")]
-pub use crate::heic::extract_meta as extract_heic_meta;
 
 #[cfg(feature = "ape")]
 mod ape;
-#[cfg(feature = "ape")]
-pub use crate::audio::extract_ape_meta;
 
 #[cfg(feature = "id3")]
 mod id3;
-#[cfg(feature = "id3")]
-pub use crate::audio::extract_id3_meta;
 
 #[cfg(feature = "exif")]
 mod exif;
-#[cfg(feature = "exif")]
-pub use crate::exif::extract_meta as extract_exif_meta;
 
 #[cfg(feature = "matroska")]
 mod matroska;
-#[cfg(feature = "matroska")]
-use crate::matroska::extract_meta as extract_mkv_meta;
 
 #[cfg(feature = "mp4")]
 mod mp4;
-#[cfg(feature = "mp4")]
-use crate::mp4::extract_meta as extract_mp4_meta;
 
 #[cfg(feature = "hash")]
 mod hash;
 
-mod audio;
-use crate::audio::AudioMetaError;
 
-mod image;
-use crate::image::{ImageMetaError, extract_basic_meta};
+/// Search and collect extractors by file extension.
+fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, MetaError> {
+    let extension: String = match Path::new(file_path).extension() {
+        Some(x) => { x.to_str().unwrap().trim().to_ascii_lowercase() },
+        _ => { panic!("missing file extension") }
+    };
 
-mod video;
-use crate::video::VideoMetaError;
-
-pub use crate::meta::{MetaClass, MetaAttribute, MetaValue, MetaFormat, MetaSource, MetaType};
-
-pub use error::MetaError;
-pub use types::{audio_types, image_types, video_types};
-use crate::image::ExifMetaError;
-use log::warn;
-
-
-/*
-**   Single entrypoint for exporting meta from all data types.
-*/
-pub fn extract_meta(extension: &str, location: &str) -> Result<Vec<MetaAttribute>, MetaError> {
-    let mut meta: Vec<MetaAttribute> = Vec::new();
-
-    // Video Format
-    #[cfg(feature = "matroska")]
-    if extension.eq_ignore_ascii_case("mkv") {
-        match extract_mkv_meta(location) {
-            Ok(meta) => {
-                return Ok(meta);
-            },
-            Err(e) => {
-                warn!("video meta error [matroska] {} {:#?}", location, e);
-                return Ok(meta);
+    match extension.as_str() {
+        "mkv" => {
+            #[cfg(feature = "matroska")]
+            {
+                use crate::matroska::Matroska;
+                Ok(vec![Box::new(Matroska::new(file_path))])
             }
-        }
-    }
+        },
+        "m4a" => {
+            Ok(vec![
+                #[cfg(feature = "mp4")]
+                {
+                    use crate::mp4::MP4;
+                    Box::new(MP4::new(file_path))
+                },
 
-    // Audio & Video Formats
-    #[cfg(feature = "mp4")]
-    let mp4_fmts :Vec<&str> = vec!["mp4", "mov", "m4v", "m4a"]; // m4a is MP4 audio
-    if mp4_fmts.iter().any(|x| x.eq_ignore_ascii_case(extension)) {
-        match extract_mp4_meta(location) {
-            Ok(meta) => {
-                return Ok(meta);
-            },
-            Err(e) => {
-                warn!("video meta error [mp4] {} {:#?}", location, e);
-                return Ok(meta);
-            }
-        }
-    }
+                #[cfg(feature = "ape")]
+                {
+                    use crate::ape::Ape;
+                    Box::new(Ape::new(file_path))
+                },
 
-    if video_types().iter().any(|x| x.eq_ignore_ascii_case(extension)){
-        warn!("no meta extractor available for this type {}", extension);
-        return Ok(meta);
-    }
-    
-    // Audio Format
-    if audio_types().iter().any(|x| x.eq_ignore_ascii_case(extension)) {
-        #[cfg(feature = "ape")]
-        match extract_ape_meta(location, &mut meta) {
-            Ok(_) => {},
-            Err(e) => {
-                warn!("audio meta error [ape] {} {:#?}", location, e);
-            }
-        }
-
-        #[cfg(feature = "id3")]
-        match extract_id3_meta(location, &mut meta) {
-            Ok(_) => {},
-            Err(e) => {
-                warn!("audio meta error [id3] {} {:#?}", location, e);
-            }
-        }  
-    }
-
-    // Image Format
-    if image_types().iter().any(|x| x.eq_ignore_ascii_case(extension)) {
-        let supported_img_fmts :Vec<&str> = vec!["png", "jpeg", "jpg", "gif", "bmp", "ico", "tiff", "pnm", "dds", "tga"];
-        if supported_img_fmts.iter().any(|x| x.eq_ignore_ascii_case(extension)) {
-            match extract_basic_meta(location, &mut meta){
-                Ok(_) => {},
-                Err(e) => {
-                    warn!("image meta error [basic] {} {:#?}", location, e);
+                #[cfg(feature = "id3")]
+                {
+                    use crate::id3::ID3;
+                    Box::new(ID3::new(file_path))
                 }
-            }
+            ])
         }
-    
-        #[cfg(feature = "heic")]
-        if extension.eq_ignore_ascii_case("heic"){
-            match extract_heic_meta(location, &mut meta) {
-                Ok(_) => {},
-                Err(e) => {
-                    warn!("image meta error [heic] {} {:#?}", location, e);
+        "mp4" | "mov" | "m4v" => {
+            #[cfg(feature = "mp4")]
+            {
+                use crate::mp4::MP4;
+                Ok(vec![Box::new(MP4::new(file_path))])
+            }
+        },
+        "amr" | "mp3" | "wav" | "flac"  | "wma" | "m4r" => {
+            Ok(vec![
+                #[cfg(feature = "ape")]
+                {
+                    use crate::ape::Ape;
+                    Box::new(Ape::new(file_path))
+                },
+
+                #[cfg(feature = "id3")]
+                {
+                    use crate::id3::ID3;
+                    Box::new(ID3::new(file_path))
                 }
-            }
-        }
-        
-        // EXIF could be in almost any format.
-        // Optimistically, we'll try to extract for each format.
-        #[cfg(feature = "exif")]
-        match extract_exif_meta(location, &mut meta) {
-            Ok(_) => {},
-            // ignore meta errors
-            Err(ExifMetaError::ExifError(_)) => {},
-            Err(ExifMetaError::InvalidFormat(_)) => {},
-            Err(ExifMetaError::NotFound(_)) => {},
-            Err(e) => {
-                warn!("unaddressed EXIF meta error {} {:#?}", location, e);
-                return Err(e.into());
-            },
+            ])
+        },
+        "heic" | "heif" | "jpeg" | "jpg" | "png" | "raf" | "tif" | "tiff" | "cr2" | "jfif" => {
+            Ok(vec![
+                Box::new(CommonImageMeta::new(file_path)),
+
+                #[cfg(feature = "heic")]
+                {
+                    use crate::heic::Heic;
+                    Box::new(Heic::new(file_path))
+                },
+
+                // EXIF could be in almost any format.
+                // Optimistically, we'll try to extract for each format.
+                #[cfg(feature = "exif")]
+                {
+                    use crate::exif::ExifExtractor;
+                    Box::new(ExifExtractor::new(file_path))
+                }
+            ])
+        },
+        _ => {
+            Err(Box::new(NoExtractorError{message: format!("no extractors for extension: {:#?}", extension)}))
         }
     }
-
-    return Ok(meta);
 }
-
 
 
 #[cfg(test)]
 mod test {
-    use log::{error, info};
-    use walkdir::WalkDir;
-    use crate::extract_meta;
+    use std::fs;
+    use crate::{get_extractors, MetaAttribute};
 
     #[test]
-    fn test_extract_image_files() {
-        const TESTDATA_IMAGE: &str = "../testdata/image/";
+    fn test_get_extrators() {
+        let extractors = get_extractors("some/path/to/asset.mp3").unwrap();
+        assert_eq!(extractors.len(), 2);
 
-        // walk directory
-        for entry in WalkDir::new(TESTDATA_IMAGE).into_iter() {
+        let extractors = get_extractors("some/path/to/asset.mkv").unwrap();
+        assert_eq!(extractors.len(), 1);
 
-            match entry {
-                Ok(e) => {
-                    if e.path().is_dir(){
-                        continue;
-                    }
-                    let path = e.path();
-                    let extension = path.extension().unwrap().to_str().unwrap();
-        
-                    println!("extension {:#?}", extension);
-                    match extract_meta(extension, path.to_str().unwrap()) {
-                        Ok(_m) => {
-                            info!("successfully extracted meta for {:#?}", path);
-                        },
-                        Err(e) => {
-                            error!("failed to extract meta from {:#?}, {:#?}", path, e);
-                        }
-                    }
-                },
-                Err(e) => {
-                    error!("error walking directory {:#?}", e);
-                }
-            }   
-        }
+        let extractors = get_extractors("some/path/to/asset.mp4").unwrap();
+        assert_eq!(extractors.len(), 1);
+
+        let extractors = get_extractors("some/path/to/asset.m4a").unwrap();
+        assert_eq!(extractors.len(), 3);
+
+        let extractors = get_extractors("some/path/to/asset.jpeg").unwrap();
+        assert_eq!(extractors.len(), 3);
+
+        let _ = match get_extractors("some/path/to/asset.123") {
+            Ok(_) => { panic!("this should've failed...")},
+            Err(e) => {
+                assert_eq!(e.to_string(), "no extractors for extension: \"123\"");
+            }
+        };
     }
 
     #[test]
-    fn test_extract_video_files() {
-        const TESTDATA_VIDEO: &str = "../testdata/broken_test.mkv";
-
-        // walk directory
-        for entry in WalkDir::new(TESTDATA_VIDEO).into_iter() {
-
-            match entry {
-                Ok(e) => {
-                    if e.path().is_dir(){
+    fn test_audio_extractors() {
+        let directory_path = "../testdata/Audio";
+ 
+        if let Ok(entries) = fs::read_dir(directory_path) {
+            // Iterate over the entries in the directory
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    if entry.file_type().map_or(false, |ft| ft.is_dir()) {
                         continue;
                     }
-                    let path = e.path();
-                    let extension = path.extension().unwrap().to_str().unwrap();
-        
-                    println!("extension {:#?}", extension);
-                    match extract_meta(extension, path.to_str().unwrap()) {
-                        Ok(m) => {
-                            println!("successfully extracted meta for {:#?}\n {:#?}", path, m);
-                        },
-                        Err(e) => {
-                            println!("failed to extract meta from {:#?}, {:#?}", path, e);
+
+                    if let Some(file_path) = entry.path().to_str() {
+                        let extractors = get_extractors(file_path).unwrap();
+                        let mut meta: Vec<MetaAttribute> = Vec::new();
+
+                        for ex in extractors {
+                            match ex.extract(&mut meta) {
+                                Ok(_) => {},
+                                Err(e) => {
+                                    println!("error {:#?}", e);
+                                }
+                            }
                         }
-                    }
-                },
-                Err(e) => {
-                    println!("error walking directory {:#?}", e);
+                        println!("\n\n");
+                        println!("File: {:#?}", file_path);
+                        println!("{:#?}", meta);
+                        println!("\n\n");
+                    }                    
                 }
-            }   
-        }
+            }
+        } 
     }
 
+    #[test]
+    fn test_video_extractors() {
+        let directory_path = "../testdata/Video";
+ 
+        if let Ok(entries) = fs::read_dir(directory_path) {
+            // Iterate over the entries in the directory
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    if entry.file_type().map_or(false, |ft| ft.is_dir()) {
+                        continue;
+                    }
 
-    // #[test]
-    // fn test_extract_meta_image() {
-    //     const TEST_IMAGE: &str = "../testdata/jenna_test.jpg";
+                    if let Some(file_path) = entry.path().to_str() {
+                        let extractors = get_extractors(file_path).unwrap();
+                        let mut meta: Vec<MetaAttribute> = Vec::new();
 
-    //     match extract_meta(&get_format(TEST_IMAGE), TEST_IMAGE) {
-    //         Ok(meta) => {
-    //             println!("meta {:#?}", meta);
-    //             assert!(meta.len() > 0);
-    //         },
-    //         Err(e) => {
-    //             panic!("{:#?}", e);
-    //         }
-    //     }
-    // }
-
-    // #[test]
-    // #[ignore = "Incomplete development, could not convert process to using a single buffer."]
-    // fn test_image_operations() {
-    //     let format = ImageFormat::from_path(TEST_IMAGE.clone().to_string()).unwrap();
-
-    //     // sync 
-
-    //     // basic image load
-    //     let img = image::open(TEST_IMAGE.clone().to_string()).unwrap();
-    //     println!("io open - result {:#?}", img.dimensions());
-        
-    //     // io -> buffers
-    //     // let mut image_sync: std::fs::File = std::fs::File::open(TEST_IMAGE.clone().to_string()).unwrap();
-    //     // let mut buf_sync: std::io::BufReader<std::fs::File> = std::io::BufReader::new(image_sync);
-    
-    //     // todo -- this doesn't work =( 
-    //     // println!("{:#?}", buf_sync);
-    //     // buf_sync.rewind();
-        
-    //     let result = image::load_from_memory_with_format(img.as_bytes(), format).unwrap();
-    //     println!("from memory w/ format - result {:#?}", result.dimensions());
-
-    //     // async 
-    //     // let mut image_async: File = tokio::fs::File::open(TEST_IMAGE.clone().to_string()).await.unwrap();
-        
-    //     // basic image load
-
-    //     // image.seek(SeekFrom::Start(0)).await.unwrap();
-
-    //     // let mut buf = BufReader::new(image);
-
-    //     // let result = ImageReader::new(Cursor::new(buf.buffer()))
-    //     //     .with_guessed_format()
-    //     //     .unwrap().decode().unwrap();
-
-    //     // println!("result {:#?}", result);
-    // }
+                        for ex in extractors {
+                            match ex.extract(&mut meta) {
+                                Ok(_) => {},
+                                Err(e) => {
+                                    println!("error {:#?}", e);
+                                }
+                            }
+                        }
+                        println!("\n\n");
+                        println!("File: {:#?}", file_path);
+                        println!("{:#?}", meta);
+                        println!("\n\n");
+                    }                    
+                }
+            }
+        } 
+    }
 }

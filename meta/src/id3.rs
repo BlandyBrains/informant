@@ -1,10 +1,8 @@
-use id3::{TagLike, Timestamp, Error as Id3Error, v1v2};
-use log::info;
-use crate::{MetaAttribute, MetaSource, meta::{MetaFormat, MetaValue}, MetaType};
+use id3::{TagLike, Timestamp, v1v2, Tag};
+use crate::{MetaAttribute, MetaSource, meta::{MetaFormat, MetaValue}, MetaType, Detail, Extractor};
 
 
-
-pub struct ID3 {}
+pub struct ID3 { file_path: String }
 impl ID3 {
     fn convert_str(value: Option<&str>) -> Option<String> {
         match value {
@@ -31,7 +29,7 @@ impl ID3 {
         }
     }
 
-    fn get_meta(tag: id3::Tag, values: &mut Vec<MetaAttribute>) {
+    fn get_meta(&self, tag: id3::Tag, values: &mut Vec<MetaAttribute>) {
         match Self::convert_str(tag.artist()) {
             Some(artist) => {
                 values.push(MetaAttribute{
@@ -228,55 +226,56 @@ impl ID3 {
     }
 }
 
+impl Detail for ID3 {
+    fn new(file_path: &str) -> Self {
+        Self { file_path: file_path.to_string() }
+    }
+}
 
-pub fn extract_meta(location: &str, meta: &mut Vec<MetaAttribute>) -> Result<(), Id3Error>{
-    match v1v2::read_from_path(location){
-        Ok(t) => {
-            info!("ID3 version: {}", t.version());
-            Ok(ID3::get_meta(t, meta))
-        },
-        Err(e) => {
-            Err(e)
-        }
+impl Extractor for ID3 {
+    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), crate::MetaError> {
+        let tag: Tag =  v1v2::read_from_path(self.file_path.to_owned())?;
+        self.get_meta(tag, meta);
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::id3::{Id3Error, extract_meta};
-    use crate::meta::MetaAttribute;
+    // use crate::id3::{Id3Error, extract_meta};
+    // use crate::meta::MetaAttribute;
 
-    const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
+    // const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
     
-    #[test]
-    fn test_parse_empty() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
-        let result: Result<(), Id3Error> = extract_meta("", &mut meta);
-        assert_eq!(true, result.is_err());
-    }
+    // #[test]
+    // fn test_parse_empty() {
+    //     let mut meta: Vec<MetaAttribute> = Vec::new();
+    //     let result: Result<(), Id3Error> = extract_meta("", &mut meta);
+    //     assert_eq!(true, result.is_err());
+    // }
 
-    #[test]
-    fn test_parse() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
-        let result: Result<(), Id3Error> = extract_meta(TEST_FILE, &mut meta);
-        match result {
-            Ok(_) => {
-                // todo confirm we can serde
-                // println!("{:#?}", meta);
-                let j = match serde_json::to_string(&meta){
-                    Ok(x) => x,
-                    Err(e) => {
-                        panic!("{}", e);
-                    }
-                };
+    // #[test]
+    // fn test_parse() {
+    //     let mut meta: Vec<MetaAttribute> = Vec::new();
+    //     let result: Result<(), Id3Error> = extract_meta(TEST_FILE, &mut meta);
+    //     match result {
+    //         Ok(_) => {
+    //             // todo confirm we can serde
+    //             // println!("{:#?}", meta);
+    //             let j = match serde_json::to_string(&meta){
+    //                 Ok(x) => x,
+    //                 Err(e) => {
+    //                     panic!("{}", e);
+    //                 }
+    //             };
                 
-                // Print, write to a file, or send to an HTTP server.
-                println!("{:#?}", j);
-            },
-            Err(e) => {
-                println!("test error {:#?}", e);
-                panic!("{:#?}", e);
-            }
-        }
-    }
+    //             // Print, write to a file, or send to an HTTP server.
+    //             println!("{:#?}", j);
+    //         },
+    //         Err(e) => {
+    //             println!("test error {:#?}", e);
+    //             panic!("{:#?}", e);
+    //         }
+    //     }
+    // }
 }

@@ -1,11 +1,10 @@
-use log::warn;
 use mp4::{Mp4Track, MoovBox, Metadata, creation_time};
 use std::{result::Result, io::BufReader, fs::File};
-use crate::{meta::{MetaSource, MetaAttribute, MetaType, MetaValue, MetaFormat}, VideoMetaError};
+use crate::{meta::{MetaSource, MetaAttribute, MetaType, MetaValue, MetaFormat}, Extractor, MetaError, Detail};
 
-pub struct MP4 {}
+pub struct MP4 { file_path: String}
 impl MP4 {
-    fn get_meta(moov: &MoovBox, values: &mut Vec<MetaAttribute>){
+    fn get_meta(&self, moov: &MoovBox, values: &mut Vec<MetaAttribute>){
         match &moov.udta {
             None => (),
             Some(x) => {
@@ -58,7 +57,7 @@ impl MP4 {
         }
     }
 
-    fn get_track(track_no: &u32, track: &Mp4Track, values: &mut Vec<MetaAttribute>){
+    fn get_track(&self, track_no: &u32, track: &Mp4Track, values: &mut Vec<MetaAttribute>){
         match track.audio_profile(){
             Ok(x) => {
                 values.push(MetaAttribute{
@@ -178,7 +177,7 @@ impl MP4 {
         });
     }
 
-    fn get_mvex(moov: &MoovBox, values: &mut Vec<MetaAttribute>){
+    fn get_mvex(&self, moov: &MoovBox, values: &mut Vec<MetaAttribute>){
         return match &moov.mvex{
             None => (),
             Some(x) => {
@@ -261,7 +260,7 @@ impl MP4 {
         };
     }
 
-    fn get_mvhd(moov: &MoovBox, values: &mut Vec<MetaAttribute>){
+    fn get_mvhd(&self, moov: &MoovBox, values: &mut Vec<MetaAttribute>){
         values.push(MetaAttribute{
             format: MetaFormat::Video,
             source: MetaSource::MP4,
@@ -326,7 +325,7 @@ impl MP4 {
         });
     }
 
-    fn from_reader(reader: &mut BufReader<File>, size: u64, values: &mut Vec<MetaAttribute>) -> Result<Vec<MetaAttribute>, VideoMetaError> {
+    fn from_reader(&self, reader: &mut BufReader<File>, size: u64, values: &mut Vec<MetaAttribute>) -> Result<(), MetaError> {
         let mp4 = mp4::Mp4Reader::read_header(reader, size)?;
 
         // compatible brands
@@ -355,48 +354,41 @@ impl MP4 {
         });
 
         // HashMap<u32, Mp4Track>
-        mp4.tracks().into_iter().for_each(|x| Self::get_track(x.0, x.1, values));
+        mp4.tracks().into_iter().for_each(|x| self.get_track(x.0, x.1, values));
 
-        Self::get_meta(&mp4.moov, values);
-        Self::get_mvex(&mp4.moov, values);
-        Self::get_mvhd(&mp4.moov, values);
+        self.get_meta(&mp4.moov, values);
+        self.get_mvex(&mp4.moov, values);
+        self.get_mvhd(&mp4.moov, values);
 
-        Ok(values.to_vec())
+        Ok(())
     }
 }
 
-pub fn extract_meta(location: &str) -> Result<Vec<MetaAttribute>, VideoMetaError> {
-    let file: File = std::fs::File::open(location.to_string())?;
-    let size: u64 = file.metadata()?.len();
-    let mut buf_reader: BufReader<File> = std::io::BufReader::new(file);
-
-    let mut values: Vec<MetaAttribute> = Vec::new();
-    match MP4::from_reader(&mut buf_reader, size, &mut values){
-        Ok(_) => (),
-        Err(e) => {
-            warn!("meta parse MP4 {:#?} {:#?}", location, e);
-        }
+impl Detail for MP4 {
+    fn new(file_path: &str) -> Self {
+        Self { file_path: file_path.to_string() }
     }
+}
+impl Extractor for MP4 {
+    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), Box<dyn std::error::Error + 'static>> {
+        let file: File = std::fs::File::open(self.file_path.to_string())?;
+        let size: u64 = file.metadata()?.len();
+        let mut buf_reader: BufReader<File> = std::io::BufReader::new(file);
     
-    return Ok(values);
+        let mut values: Vec<MetaAttribute> = Vec::new();
+        self.from_reader(&mut buf_reader, size, &mut values)
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::mp4::{VideoMetaError, extract_meta};
-    use crate::meta::MetaAttribute;
+    use crate::{meta::MetaAttribute, MetaError};
 
     const TEST_ASSET: &str = "../testdata/intake/audio/Shame.m4a"; 
-    
-    #[test]
-    fn test_parse_empty() {
-        let result: Result<Vec<MetaAttribute>, VideoMetaError> = extract_meta("");
-        assert_eq!(true, result.is_err());
-    }
 
     #[test]
     fn test_parse() {
-        let result: Result<Vec<MetaAttribute>, VideoMetaError> = extract_meta(TEST_ASSET);
+        let result: Result<Vec<MetaAttribute>, MetaError> = extract_meta(TEST_ASSET);
         match result {
             Ok(meta) => {
                 println!("{:#?}", meta);

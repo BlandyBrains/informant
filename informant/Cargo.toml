@@ -8,7 +8,13 @@ edition = "2021"
 name = "informant"
 path = "src/main.rs"
 
+[features]
+default = ["store"]
+
+store = []
+
 [dependencies]
 meta = { path = "../meta" }
 
 [dev-dependencies]
+uuid = { version = "1.1.2", features = ["v4", "fast-rng", "macro-diagnostics" ] }

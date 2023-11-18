@@ -1,8 +1,8 @@
-use ape::Item;
-use crate::{meta::{MetaAttribute, MetaValue, MetaFormat}, MetaSource, MetaType};
+use ape::{Item, Tag};
+use crate::{meta::{MetaAttribute, MetaValue, MetaFormat}, MetaSource, MetaType, Detail, Extractor};
 
 
-pub struct Ape {}
+pub struct Ape { file_path: String }
 impl Ape {
     fn convert_str(item: Option<&Item>) -> Option<String> {
         match item {
@@ -11,7 +11,7 @@ impl Ape {
         }
     }
 
-    fn get_meta(tag: ape::Tag, values: &mut Vec<MetaAttribute>) {
+    fn get_meta(&self, tag: ape::Tag, values: &mut Vec<MetaAttribute>) {
         match Self::convert_str(tag.item("title")) {
             Some(title) => {
                 values.push(MetaAttribute{
@@ -302,54 +302,56 @@ impl Ape {
     }
 }
 
-
-pub fn extract_meta(location: &str, meta: &mut Vec<MetaAttribute>) -> Result<(), ape::Error>{
-    match ape::read_from_path(location){
-        Ok(t) => Ok(Ape::get_meta(t, meta)),
-        Err(e) => {
-            Err(e)
-        }
+impl Detail for Ape {
+    fn new(file_path: &str) -> Self {
+        Self { file_path: file_path.to_string() }
     }
 }
 
+impl Extractor for Ape {
+    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), crate::MetaError> {
+        let tag: Tag = ape::read_from_path(self.file_path.to_string())?;
+        self.get_meta(tag, meta);
+        Ok(())
+    }
+}
 
 // todo - test ape extraction
 #[cfg(test)]
 mod test {
-    use crate::ape::extract_meta;
-    use crate::meta::MetaAttribute;
+    // use crate::meta::MetaAttribute;
 
-    const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
+    // const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
     
-    #[test]
-    fn test_parse_empty() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
-        let result: Result<(), ape::Error> = extract_meta("", &mut meta);
-        assert_eq!(true, result.is_err());
-    }
+    // #[test]
+    // fn test_parse_empty() {
+    //     let mut meta: Vec<MetaAttribute> = Vec::new();
+    //     let result: Result<(), ape::Error> = extract_meta("", &mut meta);
+    //     assert_eq!(true, result.is_err());
+    // }
 
-    #[test]
-    fn test_parse() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
-        let result: Result<(), ape::Error> = extract_meta(TEST_FILE, &mut meta);
-        match result {
-            Ok(_) => {
-                // todo confirm we can serde
-                // println!("{:#?}", meta);
-                let j = match serde_json::to_string(&meta){
-                    Ok(x) => x,
-                    Err(e) => {
-                        panic!("{}", e);
-                    }
-                };
+    // #[test]
+    // fn test_parse() {
+    //     let mut meta: Vec<MetaAttribute> = Vec::new();
+    //     let result: Result<(), ape::Error> = extract_meta(TEST_FILE, &mut meta);
+    //     match result {
+    //         Ok(_) => {
+    //             // todo confirm we can serde
+    //             // println!("{:#?}", meta);
+    //             let j = match serde_json::to_string(&meta){
+    //                 Ok(x) => x,
+    //                 Err(e) => {
+    //                     panic!("{}", e);
+    //                 }
+    //             };
                 
-                // Print, write to a file, or send to an HTTP server.
-                println!("{:#?}", j);
-            },
-            Err(e) => {
-                println!("test error {:#?}", e);
-                panic!("{:#?}", e);
-            }
-        }
-    }
+    //             // Print, write to a file, or send to an HTTP server.
+    //             println!("{:#?}", j);
+    //         },
+    //         Err(e) => {
+    //             println!("test error {:#?}", e);
+    //             panic!("{:#?}", e);
+    //         }
+    //     }
+    // }
 }

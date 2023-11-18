@@ -1,5 +1,4 @@
 use std::hash::{Hash, Hasher};
-use log::debug;
 use regex::Regex;
 use serde::{Serialize, Deserialize};
 
@@ -212,7 +211,7 @@ impl From<String> for MetaValue<String> {
                 return Self{value: m.as_str().to_owned()};
             },
             None => {
-                debug!("failed meta regex {:?}", v);
+                println!("failed meta regex {:#?}", v);
                 return Self{value: v.to_owned()};
             }
         }
@@ -259,16 +258,5 @@ mod test {
             let actual: MetaValue<String> = MetaValue::from(s.0.to_owned());
             assert_eq!(s.1.to_owned(), actual.value);
         }
-    }
-
-    #[test]
-    fn test_meta_value_conversions() {
-
-        // samples.push(("", ""));
-        // samples.push(("", ""));
-
-        // for s in samples {
- 
-        // }
     }
 }
