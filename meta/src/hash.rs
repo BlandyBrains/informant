@@ -21,6 +21,9 @@ pub fn extract_hash(img: DynamicImage, meta: &mut Vec<MetaAttribute>){
 
 #[cfg(test)]
 mod test {
+    use std::{collections::hash_map::DefaultHasher, hash::Hasher};
+    use std::hash::Hash;
+
     use img_hash::{HasherConfig, HashAlg};
 
     // #[test]
@@ -44,4 +47,36 @@ mod test {
             }
         }  
     }
+
+    struct MyFile{
+        content: Vec<u8>
+    }
+
+    impl Hash for MyFile {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.content.hash(state);
+        }
+    }
+
+    #[test]
+    fn test_file_comparison() {
+        let mut s = DefaultHasher::new();
+
+        let file_one: Vec<u8> = std::fs::read("../testdata/Video/0b63387d-5b88-4222-aa8c-2fdc9c18c067.mov").expect("failed to open file");
+        let file_copy: Vec<u8> = std::fs::read("../testdata/Video/0b63387d-5b88-4222-aa8c-2fdc9c18c067 copy.mov").expect("failed to open file");
+
+        let file_left: MyFile = MyFile { content: file_one };
+        let file_right: MyFile = MyFile { content: file_copy };
+
+        file_left.hash(&mut s);
+        let left_hash: u64 = s.finish();
+
+        file_right.hash(&mut s);
+        let right_hash: u64 = s.finish();
+
+        assert_eq!(left_hash, right_hash);
+        println!("left_hash {}", left_hash);
+        println!("right_hash {}", right_hash);
+    }
+
 }    

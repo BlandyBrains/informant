@@ -51,9 +51,6 @@ mod matroska;
 #[cfg(feature = "mp4")]
 mod mp4;
 
-#[cfg(feature = "hash")]
-mod hash;
-
 
 /// Search and collect extractors by file extension.
 fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, MetaError> {

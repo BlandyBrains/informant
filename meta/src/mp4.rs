@@ -374,39 +374,60 @@ impl Extractor for MP4 {
         let file: File = std::fs::File::open(self.file_path.to_string())?;
         let size: u64 = file.metadata()?.len();
         let mut buf_reader: BufReader<File> = std::io::BufReader::new(file);
-    
-        let mut values: Vec<MetaAttribute> = Vec::new();
-        self.from_reader(&mut buf_reader, size, &mut values)
+
+        self.from_reader(&mut buf_reader, size, meta)
     }
 }
 
 #[cfg(test)]
 mod test {
-    use crate::{meta::MetaAttribute, MetaError};
+    use super::MP4;
+    use crate::{MetaAttribute, MetaError, Detail, Extractor};
 
-    const TEST_ASSET: &str = "../testdata/intake/audio/Shame.m4a"; 
+    const TEST_VIDEO_MP4: &str = "../testdata/Video/test.mp4"; 
+    const TEST_VIDEO_MOV: &str = "../testdata/Video/test.mov"; 
 
     #[test]
-    fn test_parse() {
-        let result: Result<Vec<MetaAttribute>, MetaError> = extract_meta(TEST_ASSET);
+    fn test_parse_mp4() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: MP4 = MP4::new(TEST_VIDEO_MP4);
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
         match result {
-            Ok(meta) => {
-                println!("{:#?}", meta);
+            Ok(_) => {
                 // todo confirm we can serde
-                // for attr in &meta {
-                //     if attr.tag == "creation_time" {
-                //         println!("{:#?}", attr);
-                //         let ts: i64 = i64::from(attr.value.clone());
-                //         if ts > 0 {
-                //             let dt: NaiveDateTime = NaiveDateTime::from_timestamp_opt(ts, 0).unwrap();
-                //             assert_eq!(2021, dt.year());
-                //             assert_eq!(5, dt.month());
-                //         }
-                //         else {
-                //             panic!("SHOULD NOT BE HERE ");
-                //         }
-                //     }
-                // }
+                let j: String = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_mov() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: MP4 = MP4::new(TEST_VIDEO_MOV);
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
+        match result {
+            Ok(_) => {
+                // todo confirm we can serde
+                let j: String  = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
             },
             Err(e) => {
                 println!("test error {:#?}", e);

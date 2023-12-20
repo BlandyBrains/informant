@@ -41,43 +41,41 @@ impl Extractor for Heic {
 mod test {
     // use crate::meta::MetaAttribute;
 
-    // const TEST_IMAGE: &str = "../testdata/raegan_thumb.heic"; 
-    
-    // #[test]
-    // fn test_parse_empty() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), HeicMetaError> = extract_meta("", &mut meta);
-    //     assert_eq!(true, result.is_err());
-    // }
+    use crate::{MetaAttribute, MetaError, Detail, Extractor};
 
-    // #[test]
-    // fn test_parse() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), HeicMetaError> = extract_meta(TEST_IMAGE, &mut meta);
-    //     match result {
-    //         Ok(_) => {
-    //             // todo confirm we can serde
-    //             // println!("{:#?}", meta);
-    //             let j = match serde_json::to_string(&meta){
-    //                 Ok(x) => x,
-    //                 Err(e) => {
-    //                     panic!("{}", e);
-    //                 }
-    //             };
+    use super::Heic;
 
-    //             for x in meta { 
-    //                 if x.tag == "Model" {
-    //                     println!("WTF: {:#?}", x);
-    //                 }
-    //             }
+    const TEST_IMAGE: &str = "../testdata/Image/test.heic"; 
 
-    //             // Print, write to a file, or send to an HTTP server.
-    //             println!("{:#?}", j);
-    //         },
-    //         Err(e) => {
-    //             println!("test error {:#?}", e);
-    //             panic!("{:#?}", e);
-    //         }
-    //     }
-    // }
+    #[test]
+    fn test_parse() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: Heic = Heic::new(TEST_IMAGE);
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
+        match result {
+            Ok(_) => {
+                // todo confirm we can serde
+                // println!("{:#?}", meta);
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+
+                for x in meta { 
+                    if x.tag == "Model" {
+                        println!("WTF: {:#?}", x);
+                    }
+                }
+
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+                panic!("{:#?}", e);
+            }
+        }
+    }
 }

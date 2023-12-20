@@ -2,9 +2,6 @@ use std::result::Result;
 use image::{GenericImageView, DynamicImage};
 use crate::{meta::{MetaAttribute, MetaSource, MetaValue, MetaType, MetaFormat}, Detail, Extractor};
 
-#[cfg(feature = "hash")]
-use crate::hash::extract_hash;
-
 pub struct CommonImageMeta {
     file_path: String
 }
@@ -33,8 +30,49 @@ impl Extractor for CommonImageMeta {
             value: MetaType::UInt64(MetaValue::from(u64::from(width)))
         });                 
 
-        #[cfg(feature = "hash")]
-        extract_hash(dyn_img, meta);   
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    // use crate::meta::MetaAttribute;
+
+    use crate::{MetaAttribute, MetaError, Detail, Extractor};
+
+    use super::CommonImageMeta;
+
+    const TEST_IMAGE: &str = "../testdata/Image/test.jpg"; 
+
+    #[test]
+    fn test_parse() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: CommonImageMeta = CommonImageMeta::new(TEST_IMAGE);
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
+        match result {
+            Ok(_) => {
+                // todo confirm we can serde
+                // println!("{:#?}", meta);
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+
+                for x in meta { 
+                    if x.tag == "Model" {
+                        println!("WTF: {:#?}", x);
+                    }
+                }
+
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+                panic!("{:#?}", e);
+            }
+        }
     }
 }

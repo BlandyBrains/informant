@@ -319,39 +319,35 @@ impl Extractor for Ape {
 // todo - test ape extraction
 #[cfg(test)]
 mod test {
-    // use crate::meta::MetaAttribute;
+    use crate::{MetaAttribute, Detail, Extractor, MetaError};
+    use super::Ape;
 
-    // const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
-    
-    // #[test]
-    // fn test_parse_empty() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), ape::Error> = extract_meta("", &mut meta);
-    //     assert_eq!(true, result.is_err());
-    // }
+    const TEST_FILE: &str = "../testdata/Audio/test.mp3"; 
 
-    // #[test]
-    // fn test_parse() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), ape::Error> = extract_meta(TEST_FILE, &mut meta);
-    //     match result {
-    //         Ok(_) => {
-    //             // todo confirm we can serde
-    //             // println!("{:#?}", meta);
-    //             let j = match serde_json::to_string(&meta){
-    //                 Ok(x) => x,
-    //                 Err(e) => {
-    //                     panic!("{}", e);
-    //                 }
-    //             };
+    #[test]
+    fn test_parse() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: Ape = Ape::new(TEST_FILE);
+
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
+        match result {
+            Ok(_) => {
+                // todo confirm we can serde
+                // println!("{:#?}", meta);
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
                 
-    //             // Print, write to a file, or send to an HTTP server.
-    //             println!("{:#?}", j);
-    //         },
-    //         Err(e) => {
-    //             println!("test error {:#?}", e);
-    //             panic!("{:#?}", e);
-    //         }
-    //     }
-    // }
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+                panic!("{:#?}", e);
+            }
+        }
+    }
 }

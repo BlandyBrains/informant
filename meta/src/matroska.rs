@@ -150,46 +150,34 @@ impl Extractor for Matroska {
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    // use chrono::{NaiveDateTime, Datelike};
-    // use crate::{meta::MetaAttribute, MetaError};
+    use super::Matroska;
+    use crate::{MetaAttribute, MetaError, Detail, Extractor};
 
-    // const TEST_IMAGE: &str = "../testdata/matroska_test.mkv"; 
-    
-    // #[test]
-    // fn test_parse_empty() {
-    //     let result: Result<Vec<MetaAttribute>, MetaError> = extract_meta("");
-    //     assert_eq!(true, result.is_ok());
-    // }
+    const TEST_VIDEO: &str = "../testdata/Video/test.mkv"; 
 
-    // #[test]
-    // fn test_parse() {
-    //     let result: Result<Vec<MetaAttribute>, MetaError> = extract_meta(TEST_IMAGE);
-    //     match result {
-    //         Ok(meta) => {
-    //             // todo confirm we can serde
-    //             println!("{:#?}", meta);
+    #[test]
+    fn test_parse() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: Matroska = Matroska::new(TEST_VIDEO);
+        let result: Result<(), MetaError> = extractor.extract(&mut meta);
+        match result {
+            Ok(_) => {
+                // todo confirm we can serde
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
 
-    //             for attr in &meta {
-    //                 if attr.tag == "info.date_utc" {
-    //                     println!("{:#?}", attr);
-    //                     let ts: i64 = i64::from(attr.value.clone());
-    //                     if ts > 0 {
-    //                         let dt: NaiveDateTime = NaiveDateTime::from_timestamp_opt(ts, 0).unwrap();
-    //                         assert_eq!(2019, dt.year());
-    //                         assert_eq!(1, dt.month());
-    //                     }
-    //                     else {
-    //                         panic!("SHOULD NOT BE HERE ");
-    //                     }
-    //                 }
-    //             }
-    //         },
-    //         Err(e) => {
-    //             println!("test error {:#?}", e);
-    //         }
-    //     }
-    // }
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+            }
+        }
+    }
 }

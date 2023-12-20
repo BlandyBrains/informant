@@ -13,7 +13,6 @@ default = [
     "ape", 
     "id3",
     "exif",
-    "hash",
     "image",
     "mp4",
     "matroska",
@@ -21,9 +20,6 @@ default = [
 ]
 image = [
     "dep:image",
-]
-hash = [
-    "dep:img_hash"
 ]
 exif = [
     "dep:kamadak-exif"
@@ -56,7 +52,6 @@ id3 = { version = "1.5.0", optional = true }
 ape = { version = "0.4.0", optional = true }
 libheif-rs = { version = "0.15.1", optional = true }
 image = { version = "0.23.14", optional = true }
-img_hash = { version = "3.2.0", optional = true  }
 
 [dev-dependencies]
 chrono = { version = "0.4.23" }

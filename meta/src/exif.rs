@@ -359,64 +359,49 @@ impl CoreExtractor for ExifExtractor {
 
 #[cfg(test)]
 mod test {
-    // use chrono::{NaiveDateTime, Datelike};
+    use chrono::{NaiveDateTime, Datelike};
+    use crate::{Detail, Extractor};
+    use crate::exif::ExifExtractor;
+    use crate::meta::MetaAttribute;
 
-    // use crate::exif::{ExifMetaError, extract_meta};
-    // use crate::meta::MetaAttribute;
+    const TEST_IMAGE: &str = "../testdata/Image/test.jpg"; 
 
-    // const TEST_IMAGE: &str = "../testdata/jenna_test.jpg"; 
-    
-    // #[test]
-    // fn test_parse_empty() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), ExifMetaError> = extract_meta("", &mut meta);
-    //     assert_eq!(true, result.is_err());
-    // }
+    #[test]
+    fn test_parse() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let extractor: ExifExtractor = ExifExtractor::new(TEST_IMAGE);
 
-    // #[test]
-    // fn test_parse() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), ExifMetaError> = extract_meta(TEST_IMAGE, &mut meta);
-    //     match result {
-    //         Ok(_) => {
-    //             // todo confirm we can serde
-    //             // println!("{:#?}", meta);
-    //             let j = match serde_json::to_string(&meta){
-    //                 Ok(x) => x,
-    //                 Err(e) => {
-    //                     panic!("{}", e);
-    //                 }
-    //             };
+        match extractor.extract(&mut meta) {
+            Ok(_) => {
+                // todo confirm we can serde
+                // println!("{:#?}", meta);
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
 
-    //             for x in meta { 
-    //                 if x.tag == "Model" {
-    //                     println!("WTF: {:#?}", x);
-    //                 }
-    //             }
+                for x in meta { 
+                    if x.tag == "Model" {
+                        println!("Model: {:#?}", x);
+                    }
+                    if x.tag == "DateTimeOriginal" {
+                        println!("{:#?}", x);
+                        let dt = NaiveDateTime::parse_from_str(&String::from(x.value.clone()), "%Y-%m-%d %H:%M:%S").unwrap();
+                        assert_eq!(2023, dt.year());
+                        assert_eq!(10, dt.month());
+                    }
+                }
 
-    //             // Print, write to a file, or send to an HTTP server.
-    //             println!("{:#?}", j);
-    //         },
-    //         Err(e) => {
-    //             println!("test error {:#?}", e);
-    //             panic!("{:#?}", e);
-    //         }
-    //     }
-    // }
+                // Print, write to a file, or send to an HTTP server.
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                println!("test error {:#?}", e);
+                panic!("{:#?}", e);
+            }
+        }
+    }
 
-
-    // #[test]
-    // fn test_datetime_conversion() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let _: Result<(), ExifMetaError> = extract_meta("../testdata/exif_sampler.jpg", &mut meta);
-
-    //     for attr in &meta {
-    //         if attr.tag == "DateTimeOriginal" {
-    //             println!("{:#?}", attr);
-    //             let dt = NaiveDateTime::parse_from_str(&String::from(attr.value.clone()), "%Y-%m-%d %H:%M:%S").unwrap();
-    //             assert_eq!(2021, dt.year());
-    //             assert_eq!(2, dt.month());
-    //         }
-    //     }
-    // }
 }

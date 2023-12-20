@@ -1,5 +1,8 @@
 use id3::{TagLike, Timestamp, v1v2, Tag};
-use crate::{MetaAttribute, MetaSource, meta::{MetaFormat, MetaValue}, MetaType, Detail, Extractor};
+use crate::{
+    MetaAttribute, MetaSource, 
+    meta::{MetaFormat, MetaValue}, 
+    MetaType, Detail, Extractor};
 
 
 pub struct ID3 { file_path: String }
@@ -242,40 +245,57 @@ impl Extractor for ID3 {
 
 #[cfg(test)]
 mod test {
-    // use crate::id3::{Id3Error, extract_meta};
-    // use crate::meta::MetaAttribute;
+    use crate::{meta::MetaAttribute, Detail, Extractor};
+    use super::ID3;
 
-    // const TEST_FILE: &str = "../testdata/intake/audio/Joe Jackson.mp3"; 
-    
-    // #[test]
-    // fn test_parse_empty() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), Id3Error> = extract_meta("", &mut meta);
-    //     assert_eq!(true, result.is_err());
-    // }
 
-    // #[test]
-    // fn test_parse() {
-    //     let mut meta: Vec<MetaAttribute> = Vec::new();
-    //     let result: Result<(), Id3Error> = extract_meta(TEST_FILE, &mut meta);
-    //     match result {
-    //         Ok(_) => {
-    //             // todo confirm we can serde
-    //             // println!("{:#?}", meta);
-    //             let j = match serde_json::to_string(&meta){
-    //                 Ok(x) => x,
-    //                 Err(e) => {
-    //                     panic!("{}", e);
-    //                 }
-    //             };
-                
-    //             // Print, write to a file, or send to an HTTP server.
-    //             println!("{:#?}", j);
-    //         },
-    //         Err(e) => {
-    //             println!("test error {:#?}", e);
-    //             panic!("{:#?}", e);
-    //         }
-    //     }
-    // }
+    #[test]
+    fn test_no_tag() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+
+        let extractor: ID3 = ID3::new("../testdata/Audio/test.mp3");
+        match extractor.extract(&mut meta) {
+            Ok(_) => {
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                if e.to_string().starts_with("NoTag:") {
+                    println!("test error {:#?}", e);
+                    return;
+                }
+                panic!("{:#?}", e);
+            }
+        }
+    }
+
+    #[test]
+    fn test_valid_tag() {
+        let mut meta: Vec<MetaAttribute> = Vec::new();
+
+        let extractor: ID3 = ID3::new("../testdata/Audio/Razorblade.mp3");
+        match extractor.extract(&mut meta) {
+            Ok(_) => {
+                let j = match serde_json::to_string(&meta){
+                    Ok(x) => x,
+                    Err(e) => {
+                        panic!("{}", e);
+                    }
+                };
+                println!("{:#?}", j);
+            },
+            Err(e) => {
+                if e.to_string().starts_with("NoTag:") {
+                    println!("test error {:#?}", e);
+                    return;
+                }
+                panic!("{:#?}", e);
+            }
+        }
+    }
 }
