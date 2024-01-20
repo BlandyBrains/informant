@@ -2,6 +2,8 @@ use std::hash::{Hash, Hasher};
 use regex::Regex;
 use serde::{Serialize, Deserialize};
 
+use crate::{get_extractors, MetaError, Extractor};
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum MetaClass {
     Unknown,
@@ -38,7 +40,8 @@ impl Eq for MetaClass { }
 pub enum MetaFormat {
     Image,
     Video,
-    Audio
+    Audio,
+    Generic
 }
 impl From<MetaFormat> for String {
     fn from(value: MetaFormat) -> Self {
@@ -46,6 +49,7 @@ impl From<MetaFormat> for String {
             MetaFormat::Image => "Image",
             MetaFormat::Video => "Video",
             MetaFormat::Audio => "Audio",
+            MetaFormat::Generic => "Generic"
         })
     }
 }
@@ -89,7 +93,6 @@ pub struct MetaAttribute {
     pub tag: String,
     pub value: MetaType,
 }
-
 impl Hash for MetaAttribute {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let source: String = String::from(self.source.clone());
@@ -101,6 +104,46 @@ impl Hash for MetaAttribute {
             MetaType::Int64(x) => i64::from(x.value).to_string().hash(state),
             MetaType::UInt64(x) => u64::from(x.value).to_string().hash(state),
         }
+    }
+}
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Meta(Vec<MetaAttribute>);
+impl Meta {
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn capture(file: &str) -> Result<Self, MetaError> {
+        let mut s: Meta = Self(Vec::new());
+
+        let extractors: Vec<Box<dyn Extractor>> = get_extractors(file)?;
+        
+        for e in extractors {
+            match e.extract(&mut s) {
+                Ok(_) => (),
+                // todo - convert to debug error
+                Err(e) => println!("extractor error: {:#?}", e)
+            }
+        }
+
+        Ok(s)
+    }
+
+    pub fn add(&mut self, attribute: MetaAttribute){
+        self.0.push(attribute)
+    }
+
+    pub fn find(&self, tag: &str) -> Vec<MetaAttribute> {
+        let values: Vec<MetaAttribute> = self.0.clone();
+
+        let matches: Vec<MetaAttribute> = values
+            .iter()
+            .cloned()
+            .filter(|x| x.tag == tag)
+            .collect();
+
+        return matches;
     }
 }
 
@@ -116,7 +159,7 @@ impl Hash for MetaAttribute {
 ///         }
 ///     }
 /// }
-/// 
+///
 /// to this
 /// {
 ///     "format": "Image",
@@ -124,7 +167,7 @@ impl Hash for MetaAttribute {
 ///     "tag": "width",
 ///     "value": 2048
 /// }
-/// 
+///
 /// However, we'll need to make an adjustment to how we handle i64 and u64 values.
 /// The deserializer will not know how to map these values. Also, this refactor
 /// would require migrating all of the data at once. For now, we'll do nothing and
@@ -239,6 +282,14 @@ impl From<u64> for MetaValue<u64> {
 #[cfg(test)]
 mod test {
     use crate::meta::MetaValue;
+
+    use super::Meta;
+
+    #[test]
+    fn test_meta() {
+        let meta: Meta = Meta::new();
+        assert_eq!(meta.0.len(), 0);
+    }
 
     #[test]
     fn test_regex(){

@@ -2,10 +2,10 @@ use id3::{TagLike, Timestamp, v1v2, Tag};
 use crate::{
     MetaAttribute, MetaSource, 
     meta::{MetaFormat, MetaValue}, 
-    MetaType, Detail, Extractor};
+    MetaType, FromFile, Extractor, Meta};
 
 
-pub struct ID3 { file_path: String }
+pub struct ID3 { path: String }
 impl ID3 {
     fn convert_str(value: Option<&str>) -> Option<String> {
         match value {
@@ -32,10 +32,10 @@ impl ID3 {
         }
     }
 
-    fn get_meta(&self, tag: id3::Tag, values: &mut Vec<MetaAttribute>) {
+    fn get_meta(&self, tag: id3::Tag, meta: &mut Meta) {
         match Self::convert_str(tag.artist()) {
             Some(artist) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "artist".to_string(),
                     format: MetaFormat::Audio,
@@ -47,7 +47,7 @@ impl ID3 {
 
         match Self::convert_vec(tag.artists()) {
             Some(artists) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "artists".to_string(),
                     format: MetaFormat::Audio,
@@ -59,7 +59,7 @@ impl ID3 {
 
         match Self::convert_str(tag.title()) {
             Some(title) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "title".to_string(),
                     format: MetaFormat::Audio,
@@ -71,7 +71,7 @@ impl ID3 {
 
         match Self::convert_str(tag.album()) {
             Some(album) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "album".to_string(),
                     format: MetaFormat::Audio,
@@ -83,7 +83,7 @@ impl ID3 {
 
         match Self::convert_str(tag.album_artist()) {
             Some(album_artist) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "album_artist".to_string(),
                     format: MetaFormat::Audio,
@@ -95,7 +95,7 @@ impl ID3 {
 
         match tag.year() {
             Some(year) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "year".to_string(),
                     format: MetaFormat::Audio,
@@ -107,7 +107,7 @@ impl ID3 {
         
         match Self::convert_timestamp(tag.date_recorded()){
             Some(date) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "date_recorded".to_string(),
                     format: MetaFormat::Audio,
@@ -119,7 +119,7 @@ impl ID3 {
 
         match Self::convert_timestamp(tag.date_released()){
             Some(date) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "date_released".to_string(),
                     format: MetaFormat::Audio,
@@ -131,7 +131,7 @@ impl ID3 {
         
         match Self::convert_timestamp(tag.original_date_released()){
             Some(date) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "original_date_released".to_string(),
                     format: MetaFormat::Audio,
@@ -143,7 +143,7 @@ impl ID3 {
         
         match tag.duration(){
             Some(duration) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "duration".to_string(),
                     format: MetaFormat::Audio,
@@ -157,7 +157,7 @@ impl ID3 {
         // https://en.wikipedia.org/wiki/List_of_ID3v1_Genres
         match Self::convert_str(tag.genre()){
             Some(genre) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "genre".to_string(),
                     format: MetaFormat::Audio,
@@ -169,7 +169,7 @@ impl ID3 {
         
         match Self::convert_vec(tag.genres()){
             Some(genres) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "genres".to_string(),
                     format: MetaFormat::Audio,
@@ -181,7 +181,7 @@ impl ID3 {
         
         match tag.disc(){
             Some(disc) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "disc".to_string(),
                     format: MetaFormat::Audio,
@@ -193,7 +193,7 @@ impl ID3 {
 
         match tag.total_discs(){
             Some(discs) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "total_discs".to_string(),
                     format: MetaFormat::Audio,
@@ -205,7 +205,7 @@ impl ID3 {
 
         match tag.track(){
             Some(track) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "track".to_string(),
                     format: MetaFormat::Audio,
@@ -217,7 +217,7 @@ impl ID3 {
 
         match tag.total_tracks(){
             Some(tracks) => {
-                values.push(MetaAttribute{
+                meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "total_tracks".to_string(),
                     format: MetaFormat::Audio,
@@ -229,15 +229,15 @@ impl ID3 {
     }
 }
 
-impl Detail for ID3 {
-    fn new(file_path: &str) -> Self {
-        Self { file_path: file_path.to_string() }
+impl FromFile for ID3 {
+    fn file(path: &str) -> Self {
+        Self { path: path.to_string() }
     }
 }
 
 impl Extractor for ID3 {
-    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), crate::MetaError> {
-        let tag: Tag =  v1v2::read_from_path(self.file_path.to_owned())?;
+    fn extract(&self, meta: &mut Meta) -> Result<(), crate::MetaError> {
+        let tag: Tag =  v1v2::read_from_path(self.path.to_owned())?;
         self.get_meta(tag, meta);
         Ok(())
     }
@@ -245,15 +245,15 @@ impl Extractor for ID3 {
 
 #[cfg(test)]
 mod test {
-    use crate::{meta::MetaAttribute, Detail, Extractor};
+    use crate::{FromFile, Extractor, Meta};
     use super::ID3;
 
 
     #[test]
     fn test_no_tag() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let mut meta: Meta = Meta::new();
 
-        let extractor: ID3 = ID3::new("../testdata/Audio/test.mp3");
+        let extractor: ID3 = ID3::file("../testdata/Audio/test.mp3");
         match extractor.extract(&mut meta) {
             Ok(_) => {
                 let j = match serde_json::to_string(&meta){
@@ -276,9 +276,9 @@ mod test {
 
     #[test]
     fn test_valid_tag() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
+        let mut meta: Meta = Meta::new();
 
-        let extractor: ID3 = ID3::new("../testdata/Audio/Razorblade.mp3");
+        let extractor: ID3 = ID3::file("../testdata/Audio/Razorblade.mp3");
         match extractor.extract(&mut meta) {
             Ok(_) => {
                 let j = match serde_json::to_string(&meta){

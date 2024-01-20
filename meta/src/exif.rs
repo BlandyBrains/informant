@@ -2,7 +2,7 @@ use std::{io::BufReader, fs::File};
 use std::result::Result;
 use exif::{Value, Tag, In, Exif, Reader};
 
-use crate::{Detail, Extractor as CoreExtractor};
+use crate::{FromFile, Extractor as CoreExtractor, Meta};
 use crate::meta::{MetaAttribute, MetaSource, MetaType, MetaValue, MetaFormat};
 
 
@@ -30,11 +30,11 @@ fn extract_f64(exif: &Exif, tag: Tag) -> Option<MetaValue<f64>> {
     }
 }
 
-fn extract<T>(exif: &Exif, tag: Tag, extractor: &Extractor<MetaValue<T>>, meta: &mut Vec<MetaAttribute>)
+fn extract<T>(exif: &Exif, tag: Tag, extractor: &Extractor<MetaValue<T>>, meta: &mut Meta)
 where T:Clone, MetaType: From<MetaValue<T>> {
     match extractor(exif, tag){
         Some(m) => {
-            meta.push(MetaAttribute { 
+            meta.add(MetaAttribute { 
                 format: MetaFormat::Image,
                 source: MetaSource::Exif,
                 tag: tag.to_string(),
@@ -70,7 +70,7 @@ fn get_value_str(field: Option<&exif::Field>) -> Option<String> {
                 Value::Long(ref vec) if !vec.is_empty() => {
                     Some(f.display_value().to_string())
                 },               
-                Value::Unknown(ref v1, ref v2, ref v3) => {
+                Value::Unknown(ref __, ref ___, ref ____) => {
                     // warn!("EXIF: unable to extract string field, value {:#?} {:#?} {:#?}", &v1, &v2, &v3);
                     None
                 },         
@@ -171,17 +171,17 @@ fn get_value_f64(field: Option<&exif::Field>) -> Option<f64> {
 }
 
 
-pub struct ExifExtractor { file_path: String }
+pub struct ExifExtractor { path: String }
 
-impl Detail for ExifExtractor {
-    fn new(file_path: &str) -> Self {
-        Self {file_path: file_path.to_string()}
+impl FromFile for ExifExtractor {
+    fn file(path: &str) -> Self {
+        Self {path: path.to_string()}
     }
 }
 
 impl CoreExtractor for ExifExtractor {
-    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), crate::MetaError> {
-        let file: File = std::fs::File::open(&self.file_path)?;
+    fn extract(&self, meta: &mut Meta) -> Result<(), crate::MetaError> {
+        let file: File = std::fs::File::open(&self.path)?;
         let mut buf_reader: BufReader<&File> = std::io::BufReader::new(&file);
         let exif_reader: Reader = exif::Reader::new();
         let exif: Exif = exif_reader.read_from_container(&mut buf_reader)?;
@@ -360,16 +360,15 @@ impl CoreExtractor for ExifExtractor {
 #[cfg(test)]
 mod test {
     use chrono::{NaiveDateTime, Datelike};
-    use crate::{Detail, Extractor};
+    use crate::{Meta, FromFile, Extractor};
     use crate::exif::ExifExtractor;
-    use crate::meta::MetaAttribute;
 
     const TEST_IMAGE: &str = "../testdata/Image/test.jpg"; 
 
     #[test]
     fn test_parse() {
-        let mut meta: Vec<MetaAttribute> = Vec::new();
-        let extractor: ExifExtractor = ExifExtractor::new(TEST_IMAGE);
+        let mut meta: Meta = Meta::new();
+        let extractor: ExifExtractor = ExifExtractor::file(TEST_IMAGE);
 
         match extractor.extract(&mut meta) {
             Ok(_) => {
@@ -382,15 +381,20 @@ mod test {
                     }
                 };
 
-                for x in meta { 
-                    if x.tag == "Model" {
-                        println!("Model: {:#?}", x);
-                    }
-                    if x.tag == "DateTimeOriginal" {
-                        println!("{:#?}", x);
-                        let dt = NaiveDateTime::parse_from_str(&String::from(x.value.clone()), "%Y-%m-%d %H:%M:%S").unwrap();
+                meta
+                    .find("Model")
+                    .first()
+                    .map(|x| println!("{:#?}", x));
+
+                match meta.find("DateTimeOriginal").first() {
+                    Some(dto) => {
+                        println!("{:#?}", dto);
+                        let dt: NaiveDateTime = NaiveDateTime::parse_from_str(&String::from(dto.value.clone()), "%Y-%m-%d %H:%M:%S").unwrap();
                         assert_eq!(2023, dt.year());
                         assert_eq!(10, dt.month());
+                    }, 
+                    None => {
+                        panic!("should have found a value!");
                     }
                 }
 

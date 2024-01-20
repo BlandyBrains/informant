@@ -6,6 +6,7 @@ mod meta;
 mod image;
 
 use image::CommonImageMeta;
+pub use meta::Meta;
 
 pub use crate::meta::{MetaClass, MetaAttribute, MetaValue, MetaFormat, MetaSource, MetaType};
 
@@ -25,12 +26,12 @@ impl fmt::Display for NoExtractorError {
 impl std::error::Error for NoExtractorError {}
 
 /// Fundamental trait for extracting metadata.
-trait Extractor{
-    fn extract(&self, meta: &mut Vec<MetaAttribute>) -> Result<(), MetaError>;
+pub trait Extractor{
+    fn extract(&self, meta: &mut Meta) -> Result<(), MetaError>;
 }
 
-trait Detail {
-    fn new(file_path: &str) -> Self;
+pub trait FromFile {
+    fn file(path: &str) -> Self;
 }
 
 #[cfg(feature="heic")]
@@ -51,9 +52,12 @@ mod matroska;
 #[cfg(feature = "mp4")]
 mod mp4;
 
+#[cfg(feature = "hash")]
+mod hash;
+
 
 /// Search and collect extractors by file extension.
-fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, MetaError> {
+pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, MetaError> {
     let extension: String = match Path::new(file_path).extension() {
         Some(x) => { x.to_str().unwrap().trim().to_ascii_lowercase() },
         _ => { panic!("missing file extension") }
@@ -64,7 +68,7 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
             #[cfg(feature = "matroska")]
             {
                 use crate::matroska::Matroska;
-                Ok(vec![Box::new(Matroska::new(file_path))])
+                Ok(vec![Box::new(Matroska::file(file_path))])
             }
         },
         "m4a" => {
@@ -72,19 +76,19 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
                 #[cfg(feature = "mp4")]
                 {
                     use crate::mp4::MP4;
-                    Box::new(MP4::new(file_path))
+                    Box::new(MP4::file(file_path))
                 },
 
                 #[cfg(feature = "ape")]
                 {
                     use crate::ape::Ape;
-                    Box::new(Ape::new(file_path))
+                    Box::new(Ape::file(file_path))
                 },
 
                 #[cfg(feature = "id3")]
                 {
                     use crate::id3::ID3;
-                    Box::new(ID3::new(file_path))
+                    Box::new(ID3::file(file_path))
                 }
             ])
         }
@@ -92,7 +96,7 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
             #[cfg(feature = "mp4")]
             {
                 use crate::mp4::MP4;
-                Ok(vec![Box::new(MP4::new(file_path))])
+                Ok(vec![Box::new(MP4::file(file_path))])
             }
         },
         "amr" | "mp3" | "wav" | "flac"  | "wma" | "m4r" => {
@@ -100,24 +104,24 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
                 #[cfg(feature = "ape")]
                 {
                     use crate::ape::Ape;
-                    Box::new(Ape::new(file_path))
+                    Box::new(Ape::file(file_path))
                 },
 
                 #[cfg(feature = "id3")]
                 {
                     use crate::id3::ID3;
-                    Box::new(ID3::new(file_path))
+                    Box::new(ID3::file(file_path))
                 }
             ])
         },
         "heic" | "heif" | "jpeg" | "jpg" | "png" | "raf" | "tif" | "tiff" | "cr2" | "jfif" => {
             Ok(vec![
-                Box::new(CommonImageMeta::new(file_path)),
+                Box::new(CommonImageMeta::file(file_path)),
 
                 #[cfg(feature = "heic")]
                 {
                     use crate::heic::Heic;
-                    Box::new(Heic::new(file_path))
+                    Box::new(Heic::file(file_path))
                 },
 
                 // EXIF could be in almost any format.
@@ -125,7 +129,7 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
                 #[cfg(feature = "exif")]
                 {
                     use crate::exif::ExifExtractor;
-                    Box::new(ExifExtractor::new(file_path))
+                    Box::new(ExifExtractor::file(file_path))
                 }
             ])
         },
@@ -139,7 +143,7 @@ fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static>>, 
 #[cfg(test)]
 mod test {
     use std::fs;
-    use crate::{get_extractors, MetaAttribute};
+    use crate::{get_extractors, Meta};
 
     #[test]
     fn test_get_extrators() {
@@ -180,7 +184,7 @@ mod test {
 
                     if let Some(file_path) = entry.path().to_str() {
                         let extractors = get_extractors(file_path).unwrap();
-                        let mut meta: Vec<MetaAttribute> = Vec::new();
+                        let mut meta: Meta = Meta::new();
 
                         for ex in extractors {
                             match ex.extract(&mut meta) {
@@ -214,7 +218,7 @@ mod test {
 
                     if let Some(file_path) = entry.path().to_str() {
                         let extractors = get_extractors(file_path).unwrap();
-                        let mut meta: Vec<MetaAttribute> = Vec::new();
+                        let mut meta: Meta = Meta::new();
 
                         for ex in extractors {
                             match ex.extract(&mut meta) {
