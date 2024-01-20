@@ -65,11 +65,18 @@ pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static
 
     match extension.as_str() {
         "mkv" => {
+            Ok(vec![
             #[cfg(feature = "matroska")]
             {
                 use crate::matroska::Matroska;
-                Ok(vec![Box::new(Matroska::file(file_path))])
-            }
+                Box::new(Matroska::file(file_path))
+            },
+
+            #[cfg(feature = "hash")]
+            {
+                use crate::hash::MetaHash;
+                Box::new(MetaHash::file(file_path))
+            }])
         },
         "m4a" => {
             Ok(vec![
@@ -89,15 +96,29 @@ pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static
                 {
                     use crate::id3::ID3;
                     Box::new(ID3::file(file_path))
+                },
+
+                #[cfg(feature = "hash")]
+                {
+                    use crate::hash::MetaHash;
+                    Box::new(MetaHash::file(file_path))
                 }
             ])
         }
         "mp4" | "mov" | "m4v" => {
-            #[cfg(feature = "mp4")]
-            {
-                use crate::mp4::MP4;
-                Ok(vec![Box::new(MP4::file(file_path))])
-            }
+            Ok(vec![
+                #[cfg(feature = "mp4")]
+                {
+                    use crate::mp4::MP4;
+                    Box::new(MP4::file(file_path))
+                },
+                
+                #[cfg(feature = "hash")]
+                {
+                    use crate::hash::MetaHash;
+                    Box::new(MetaHash::file(file_path))
+                }
+            ])
         },
         "amr" | "mp3" | "wav" | "flac"  | "wma" | "m4r" => {
             Ok(vec![
@@ -111,6 +132,12 @@ pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static
                 {
                     use crate::id3::ID3;
                     Box::new(ID3::file(file_path))
+                },
+
+                #[cfg(feature = "hash")]
+                {
+                    use crate::hash::MetaHash;
+                    Box::new(MetaHash::file(file_path))
                 }
             ])
         },
@@ -130,6 +157,12 @@ pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static
                 {
                     use crate::exif::ExifExtractor;
                     Box::new(ExifExtractor::file(file_path))
+                },
+
+                #[cfg(feature = "hash")]
+                {
+                    use crate::hash::MetaHash;
+                    Box::new(MetaHash::file(file_path))
                 }
             ])
         },
