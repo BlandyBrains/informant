@@ -1,7 +1,7 @@
 use std::{fs::File, io::Read};
 
 use crate::{
-    meta::{MetaAttribute, MetaFormat, MetaSource, MetaType, MetaValue}, 
+    meta::{MetaAttribute, MetaSource, MetaType, MetaValue}, 
     FromFile, Extractor, Meta};
 
 
@@ -29,7 +29,6 @@ impl Extractor for MetaHash {
         meta.add(MetaAttribute{
             source: MetaSource::Hash,
             tag: "hash".to_string(),
-            format: MetaFormat::Generic,
             value: MetaType::String(MetaValue::from(hash.to_string())),
         });
 

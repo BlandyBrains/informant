@@ -1,6 +1,6 @@
 use mp4::{Mp4Track, MoovBox, Metadata, creation_time};
 use std::{result::Result, io::BufReader, fs::File};
-use crate::{meta::{MetaSource, MetaAttribute, MetaType, MetaValue, MetaFormat}, Extractor, MetaError, FromFile, Meta};
+use crate::{meta::{MetaSource, MetaAttribute, MetaType, MetaValue}, Extractor, MetaError, FromFile, Meta};
 
 pub struct MP4 { path: String}
 impl MP4 {
@@ -17,7 +17,6 @@ impl MP4 {
                                 match z.title() {
                                     Some(title) => {
                                         meta.add(MetaAttribute{
-                                            format: MetaFormat::Video,
                                             source: MetaSource::MP4,
                                             tag: "title".to_string(),
                                             value: MetaType::String(MetaValue::from(title.as_ref().to_owned())),
@@ -29,7 +28,6 @@ impl MP4 {
                                 match z.year() {
                                     Some(year) => {
                                         meta.add(MetaAttribute{
-                                            format: MetaFormat::Video,
                                             source: MetaSource::MP4,
                                             tag: "year".to_string(),
                                             value: MetaType::UInt64(MetaValue::from(year as u64)),
@@ -41,7 +39,6 @@ impl MP4 {
                                 match z.summary() {
                                     Some(summary) => {
                                         meta.add(MetaAttribute{
-                                            format: MetaFormat::Video,
                                             source: MetaSource::MP4,
                                             tag: "summary".to_string(),
                                             value: MetaType::String(MetaValue::from(summary.as_ref().to_owned())),
@@ -61,7 +58,6 @@ impl MP4 {
         match track.audio_profile(){
             Ok(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::MP4,
                     tag: format!("track_{}.audio_profile", track_no),
                     value: MetaType::String(MetaValue::from(x.to_string())),
@@ -73,7 +69,6 @@ impl MP4 {
         match track.media_type(){
             Ok(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::MP4,
                     tag: format!("track_{}.media_type", track_no),
                     value: MetaType::String(MetaValue::from(x.to_string())),
@@ -85,7 +80,6 @@ impl MP4 {
         match track.track_type() {
             Ok(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::MP4,
                     tag: format!("track_{}.track_type", track_no),
                     value: MetaType::String(MetaValue::from(x.to_string())),
@@ -97,7 +91,6 @@ impl MP4 {
         match track.video_profile(){
             Ok(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::MP4,
                     tag: format!("track_{}.video_profile", track_no),
                     value: MetaType::String(MetaValue::from(x.to_string())),
@@ -107,70 +100,60 @@ impl MP4 {
         };
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.bitrate", track_no),
             value: MetaType::UInt64(MetaValue::from(track.bitrate() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.default_sample_duration", track_no),
             value: MetaType::UInt64(MetaValue::from(track.default_sample_duration as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.duration", track_no),
             value: MetaType::UInt64(MetaValue::from(track.duration().as_secs() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.frame_rate", track_no),
             value: MetaType::Rational(MetaValue::from(track.frame_rate())),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.height", track_no),
             value: MetaType::UInt64(MetaValue::from(track.height() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.width", track_no),
             value: MetaType::UInt64(MetaValue::from(track.width() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.language", track_no),
             value: MetaType::String(MetaValue::from(track.language().to_string())),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.sample_count", track_no),
             value: MetaType::UInt64(MetaValue::from(track.sample_count() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.timescale", track_no),
             value: MetaType::UInt64(MetaValue::from(track.timescale() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: format!("track_{}.track_id", track_no),
             value: MetaType::UInt64(MetaValue::from(track.track_id() as u64)),
@@ -186,70 +169,60 @@ impl MP4 {
                     Some(y) => {
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "mvex.version".to_string(),
                             value: MetaType::UInt64(MetaValue::from(y.version as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "fragment_duration".to_string(),
                             value: MetaType::UInt64(MetaValue::from(y.fragment_duration)),
                         });
 
-                        meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
+                        meta.add(MetaAttribute{  
                             source: MetaSource::MP4,
                             tag: "flags".to_string(),
                             value: MetaType::UInt64(MetaValue::from(y.flags as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.version".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.version as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.flags".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.flags as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.track_id".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.track_id as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.default_sample_description_index".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.default_sample_description_index as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.default_sample_duration".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.default_sample_duration as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.default_sample_size".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.default_sample_size as u64)),
                         });
 
                         meta.add(MetaAttribute{
-                            format: MetaFormat::Video,
                             source: MetaSource::MP4,
                             tag: "trex.default_sample_flags".to_string(),
                             value: MetaType::UInt64(MetaValue::from(x.trex.default_sample_flags as u64)),
@@ -262,63 +235,54 @@ impl MP4 {
 
     fn get_mvhd(&self, moov: &MoovBox, meta: &mut Meta){
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.version".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.version as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.flags".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.flags as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "creation_time".to_string(),
             value: MetaType::UInt64(MetaValue::from(creation_time(moov.mvhd.creation_time) as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "modification_time".to_string(),
             value: MetaType::UInt64(MetaValue::from(creation_time(moov.mvhd.modification_time) as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "timescale".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.timescale as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.duration".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.duration as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.rate".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.rate.value() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.volume".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.volume.value() as u64)),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "mvhd.next_track_id".to_string(),
             value: MetaType::UInt64(MetaValue::from(moov.mvhd.next_track_id as u64)),
@@ -331,7 +295,6 @@ impl MP4 {
         // compatible brands
         let comp_brands: String = mp4.ftyp.compatible_brands.iter().map(|x| String::from_utf8(x.value.to_vec()).unwrap_or("".to_string())).collect::<Vec<String>>().join(",");
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "compatible_brands".to_string(),
             value: MetaType::String(MetaValue::from(comp_brands)),
@@ -339,7 +302,6 @@ impl MP4 {
 
         // major brand
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "major_brand".to_string(),
             value: MetaType::String(MetaValue::from(mp4.ftyp.major_brand.to_string())),
@@ -347,7 +309,6 @@ impl MP4 {
 
         // minor version
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::MP4,
             tag: "minor_version".to_string(),
             value: MetaType::String(MetaValue::from(mp4.ftyp.minor_version.to_string())),

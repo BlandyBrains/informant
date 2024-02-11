@@ -5,10 +5,11 @@ use std::path::Path;
 mod meta;
 mod image;
 
+use general::General;
 use image::CommonImageMeta;
 pub use meta::Meta;
 
-pub use crate::meta::{MetaClass, MetaAttribute, MetaValue, MetaFormat, MetaSource, MetaType};
+pub use crate::meta::{MetaClass, MetaAttribute, MetaValue, MetaSource, MetaType};
 
 type MetaError = Box<dyn std::error::Error + 'static>;
 
@@ -33,6 +34,8 @@ pub trait Extractor{
 pub trait FromFile {
     fn file(path: &str) -> Self;
 }
+
+mod general;
 
 #[cfg(feature="heic")]
 mod heic;
@@ -63,113 +66,87 @@ pub fn get_extractors(file_path: &str) -> Result<Vec<Box<dyn Extractor + 'static
         _ => { panic!("missing file extension") }
     };
 
+    let mut extractors: Vec<Box<dyn Extractor>> = vec![
+        // universal extractors
+        Box::new(General::file(file_path)),
+
+        #[cfg(feature = "hash")]
+        {
+            use crate::hash::MetaHash;
+            Box::new(MetaHash::file(file_path))
+        }
+    ];
+
     match extension.as_str() {
         "mkv" => {
-            Ok(vec![
             #[cfg(feature = "matroska")]
             {
                 use crate::matroska::Matroska;
-                Box::new(Matroska::file(file_path))
-            },
-
-            #[cfg(feature = "hash")]
-            {
-                use crate::hash::MetaHash;
-                Box::new(MetaHash::file(file_path))
-            }])
+                extractors.push(Box::new(Matroska::file(file_path)));
+            }
         },
         "m4a" => {
-            Ok(vec![
-                #[cfg(feature = "mp4")]
-                {
-                    use crate::mp4::MP4;
-                    Box::new(MP4::file(file_path))
-                },
+            #[cfg(feature = "mp4")]
+            {
+                use crate::mp4::MP4;
+                extractors.push(Box::new(MP4::file(file_path)))
+            }
 
-                #[cfg(feature = "ape")]
-                {
-                    use crate::ape::Ape;
-                    Box::new(Ape::file(file_path))
-                },
+            #[cfg(feature = "ape")]
+            {
+                use crate::ape::Ape;
+                extractors.push(Box::new(Ape::file(file_path)))
+            }
 
-                #[cfg(feature = "id3")]
-                {
-                    use crate::id3::ID3;
-                    Box::new(ID3::file(file_path))
-                },
-
-                #[cfg(feature = "hash")]
-                {
-                    use crate::hash::MetaHash;
-                    Box::new(MetaHash::file(file_path))
-                }
-            ])
+            #[cfg(feature = "id3")]
+            {
+                use crate::id3::ID3;
+                extractors.push(Box::new(ID3::file(file_path)))
+            }
         }
         "mp4" | "mov" | "m4v" => {
-            Ok(vec![
-                #[cfg(feature = "mp4")]
-                {
-                    use crate::mp4::MP4;
-                    Box::new(MP4::file(file_path))
-                },
-                
-                #[cfg(feature = "hash")]
-                {
-                    use crate::hash::MetaHash;
-                    Box::new(MetaHash::file(file_path))
-                }
-            ])
+            #[cfg(feature = "mp4")]
+            {
+                use crate::mp4::MP4;
+                extractors.push(Box::new(MP4::file(file_path)))
+            }
         },
         "amr" | "mp3" | "wav" | "flac"  | "wma" | "m4r" => {
-            Ok(vec![
-                #[cfg(feature = "ape")]
-                {
-                    use crate::ape::Ape;
-                    Box::new(Ape::file(file_path))
-                },
+            #[cfg(feature = "ape")]
+            {
+                use crate::ape::Ape;
+                extractors.push(Box::new(Ape::file(file_path)))
+            }
 
-                #[cfg(feature = "id3")]
-                {
-                    use crate::id3::ID3;
-                    Box::new(ID3::file(file_path))
-                },
-
-                #[cfg(feature = "hash")]
-                {
-                    use crate::hash::MetaHash;
-                    Box::new(MetaHash::file(file_path))
-                }
-            ])
+            #[cfg(feature = "id3")]
+            {
+                use crate::id3::ID3;
+                extractors.push(Box::new(ID3::file(file_path)))
+            }
         },
         "heic" | "heif" | "jpeg" | "jpg" | "png" | "raf" | "tif" | "tiff" | "cr2" | "jfif" => {
-            Ok(vec![
-                Box::new(CommonImageMeta::file(file_path)),
 
-                #[cfg(feature = "heic")]
-                {
-                    use crate::heic::Heic;
-                    Box::new(Heic::file(file_path))
-                },
+            extractors.push(Box::new(CommonImageMeta::file(file_path)));
 
-                // EXIF could be in almost any format.
-                // Optimistically, we'll try to extract for each format.
-                #[cfg(feature = "exif")]
-                {
-                    use crate::exif::ExifExtractor;
-                    Box::new(ExifExtractor::file(file_path))
-                },
+            #[cfg(feature = "heic")]
+            {
+                use crate::heic::Heic;
+                extractors.push(Box::new(Heic::file(file_path)))
+            }
 
-                #[cfg(feature = "hash")]
-                {
-                    use crate::hash::MetaHash;
-                    Box::new(MetaHash::file(file_path))
-                }
-            ])
+            // EXIF could be in almost any format.
+            // Optimistically, we'll try to extract for each format.
+            #[cfg(feature = "exif")]
+            {
+                use crate::exif::ExifExtractor;
+                extractors.push(Box::new(ExifExtractor::file(file_path)))
+            }
         },
         _ => {
-            Err(Box::new(NoExtractorError{message: format!("no extractors for extension: {:#?}", extension)}))
+            println!("reverting to universal extractors {:#?}", extension);
         }
     }
+    Ok(extractors)
 }
 
 

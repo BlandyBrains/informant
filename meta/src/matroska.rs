@@ -1,7 +1,7 @@
 use matroska::{Tracktype, Settings};
 use std::result::Result;
 use crate::{
-    meta::{MetaSource, MetaAttribute, MetaType, MetaValue, MetaFormat}, 
+    meta::{MetaSource, MetaAttribute, MetaType, MetaValue}, 
     Extractor, MetaError, FromFile, Meta};
 
 
@@ -13,7 +13,6 @@ impl Matroska {
         match &m.info.date_utc {
             Some(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "info.date_utc".to_string(),
                     value: MetaType::Int64(MetaValue::from(i64::from(x.clone()))),
@@ -25,7 +24,6 @@ impl Matroska {
         match m.info.duration {
             Some(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "info.duration".to_string(),
                     value: MetaType::UInt64(MetaValue::from(x.as_secs())),
@@ -37,7 +35,6 @@ impl Matroska {
         match m.info.title.clone() {
             Some(x) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "info.title".to_string(),
                     value: MetaType::String(MetaValue::from(x)),
@@ -47,21 +44,18 @@ impl Matroska {
         }
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::Matroska,
             tag: "info.muxing_app".to_string(),
             value: MetaType::String(MetaValue::from(m.info.muxing_app.clone())),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::Matroska,
             tag: "info.writing_app".to_string(),
             value: MetaType::String(MetaValue::from(m.info.writing_app.clone())),
         });
 
         meta.add(MetaAttribute{
-            format: MetaFormat::Video,
             source: MetaSource::Matroska,
             tag: "track_count".to_string(),
             value: MetaType::Int64(MetaValue::from(m.tracks.len() as i64)),
@@ -80,14 +74,12 @@ impl Matroska {
         match &audio_track.unwrap().settings {
             Settings::Audio(settings) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "audio.settings.channels".to_string(),
                     value: MetaType::UInt64(MetaValue::from(settings.channels)),
                 });
 
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "audio.settings.sample_rate".to_string(),
                     value: MetaType::Rational(MetaValue::from(settings.sample_rate)),
@@ -108,13 +100,11 @@ impl Matroska {
         match &video_track.unwrap().settings {
             Settings::Video(settings) => {
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "video.settings.pixel_height".to_string(),
                     value: MetaType::UInt64(MetaValue::from(settings.pixel_height)),
                 });
                 meta.add(MetaAttribute{
-                    format: MetaFormat::Video,
                     source: MetaSource::Matroska,
                     tag: "video.settings.pixel_width".to_string(),
                     value: MetaType::UInt64(MetaValue::from(settings.pixel_width)),

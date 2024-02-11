@@ -1,5 +1,5 @@
 use ape::{Item, Tag};
-use crate::{meta::{MetaAttribute, MetaValue, MetaFormat}, MetaSource, MetaType, FromFile, Extractor, Meta};
+use crate::{meta::{MetaAttribute, MetaValue}, MetaSource, MetaType, FromFile, Extractor, Meta};
 
 
 pub struct Ape { path: String }
@@ -17,7 +17,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "title".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(title)),
                 });
             }, 
@@ -29,7 +28,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "subtitle".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(subtitle)),
                 });
             }, 
@@ -41,7 +39,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "artist".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(artist)),
                 });
             }, 
@@ -53,7 +50,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "album".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(album)),
                 });
             }, 
@@ -65,7 +61,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "debut_album".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(debut_album)),
                 });
             }, 
@@ -77,7 +72,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "publisher".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(publisher)),
                 });
             }, 
@@ -89,7 +83,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "conductor".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(conductor)),
                 });
             }, 
@@ -101,7 +94,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "composer".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(composer)),
                 });
             }, 
@@ -113,7 +105,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "comment".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(comment)),
                 });
             }, 
@@ -125,7 +116,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "copyright".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(copyright)),
                 });
             }, 
@@ -137,7 +127,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "publication_right".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(publication_right)),
                 });
             }, 
@@ -149,7 +138,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "isbn".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(isbn)),
                 });
             }, 
@@ -161,7 +149,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "catalog".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(catalog)),
                 });
             }, 
@@ -173,7 +160,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "label_code".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(label_code)),
                 });
             }, 
@@ -185,7 +171,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "related".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(related)),
                 });
             }, 
@@ -197,7 +182,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "isrc".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(isrc)),
                 });
             }, 
@@ -209,7 +193,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "language".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(language)),
                 });
             }, 
@@ -221,7 +204,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "bibliography".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(bibliography)),
                 });
             }, 
@@ -233,7 +215,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "year".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(year)),
                 });
             }, 
@@ -245,7 +226,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "record_date".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(record_date)),
                 });
             }, 
@@ -257,7 +237,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "genre".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(genre)),
                 });
             }, 
@@ -269,7 +248,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "track".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(track)),
                 });
             }, 
@@ -281,7 +259,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "media".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(media)),
                 });
             }, 
@@ -293,7 +270,6 @@ impl Ape {
                 meta.add(MetaAttribute{
                     source: MetaSource::Ape,
                     tag: "upc".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(upc)),
                 });
             }, 

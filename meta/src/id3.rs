@@ -1,7 +1,7 @@
 use id3::{TagLike, Timestamp, v1v2, Tag};
 use crate::{
     MetaAttribute, MetaSource, 
-    meta::{MetaFormat, MetaValue}, 
+    meta::MetaValue, 
     MetaType, FromFile, Extractor, Meta};
 
 
@@ -38,7 +38,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "artist".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(artist)),
                 });
             },
@@ -50,7 +49,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "artists".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(artists.join(","))),
                 });
             },
@@ -62,7 +60,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "title".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(title)),
                 });
             },
@@ -74,7 +71,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "album".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(album)),
                 });
             },
@@ -86,7 +82,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "album_artist".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(album_artist)),
                 });
             },
@@ -98,7 +93,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "year".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::Int64(MetaValue::from(year as i64)),
                 });
             },
@@ -110,7 +104,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "date_recorded".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(date)),
                 });
             },
@@ -122,7 +115,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "date_released".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(date)),
                 });
             },
@@ -134,7 +126,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "original_date_released".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(date)),
                 });
             },
@@ -146,7 +137,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "duration".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::UInt64(MetaValue::from(duration as u64)),
                 });
             },
@@ -160,7 +150,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "genre".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::String(MetaValue::from(genre)),
                 });
             },
@@ -171,8 +160,7 @@ impl ID3 {
             Some(genres) => {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
-                    tag: "genres".to_string(),
-                    format: MetaFormat::Audio,
+                    tag: "genres".to_string(),                    
                     value: MetaType::String(MetaValue::from(genres.join(","))),
                 });
             },
@@ -184,7 +172,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "disc".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::UInt64(MetaValue::from(disc as u64)),
                 });
             },
@@ -196,7 +183,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "total_discs".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::UInt64(MetaValue::from(discs as u64)),
                 });
             },
@@ -208,7 +194,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "track".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::UInt64(MetaValue::from(track as u64)),
                 });
             },
@@ -220,7 +205,6 @@ impl ID3 {
                 meta.add(MetaAttribute{
                     source: MetaSource::ID3,
                     tag: "total_tracks".to_string(),
-                    format: MetaFormat::Audio,
                     value: MetaType::UInt64(MetaValue::from(tracks as u64)),
                 });
             },

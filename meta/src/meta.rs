@@ -28,31 +28,30 @@ impl From<MetaClass> for String {
         })
     }
 }
-
+impl From<String> for MetaClass {
+    fn from(value: String) -> Self {
+        match value.as_str() {
+            "Audio" => MetaClass::Audio,
+            "Image" => MetaClass::Image,
+            "Video" => MetaClass::Video,
+            "Document" => MetaClass::Document,
+            _ => MetaClass::Unknown,
+        }
+    }
+}
 impl Hash for MetaClass {
     fn hash<H: Hasher>(&self, state: &mut H) {
         core::mem::discriminant(self).hash(state);
     }
 }
-impl Eq for MetaClass { }
-
-#[derive(PartialEq, Serialize, Deserialize, Clone, Debug)]
-pub enum MetaFormat {
-    Image,
-    Video,
-    Audio,
-    Generic
-}
-impl From<MetaFormat> for String {
-    fn from(value: MetaFormat) -> Self {
-        String::from(match value {
-            MetaFormat::Image => "Image",
-            MetaFormat::Video => "Video",
-            MetaFormat::Audio => "Audio",
-            MetaFormat::Generic => "Generic"
-        })
+impl From<MetaType> for MetaClass {
+    fn from(value: MetaType) -> Self {
+        let class: String = String::from(value);
+        return String::into(class);
     }
 }
+
+impl Eq for MetaClass { }
 
 #[derive(PartialEq, Serialize, Deserialize, Clone, Debug, )]
 pub enum MetaSource {
@@ -65,6 +64,13 @@ pub enum MetaSource {
     Heic,
     Hash,
 }
+
+impl Default for MetaSource {
+    fn default() -> Self {
+        MetaSource::Basic
+    }
+}
+
 impl From<MetaSource> for String {
     fn from(value: MetaSource) -> Self {
         String::from(match value {
@@ -88,11 +94,21 @@ impl From<MetaSource> for String {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct MetaAttribute {
-    pub format: MetaFormat,
     pub source: MetaSource,
     pub tag: String,
     pub value: MetaType,
 }
+
+impl Default for MetaAttribute {
+    fn default() -> Self {
+        Self { 
+            source: Default::default(), 
+            tag: Default::default(), 
+            value: Default::default() 
+        }
+    }
+}
+
 impl Hash for MetaAttribute {
     fn hash<H: Hasher>(&self, state: &mut H) {
         let source: String = String::from(self.source.clone());
@@ -106,7 +122,8 @@ impl Hash for MetaAttribute {
         }
     }
 }
-#[derive(Debug, Serialize, Deserialize)]
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Meta(Vec<MetaAttribute>);
 impl Meta {
@@ -134,6 +151,16 @@ impl Meta {
         self.0.push(attribute)
     }
 
+    pub fn update(&mut self, attribute: MetaAttribute) {
+        match self.0.iter_mut().find(|attr| attr.source == attribute.source &&
+            attr.tag == attribute.tag){
+                Some(a) => {
+                    a.value = attribute.value;
+                },
+                _ => ()
+            }
+    }
+
     pub fn find(&self, tag: &str) -> Vec<MetaAttribute> {
         let values: Vec<MetaAttribute> = self.0.clone();
 
@@ -144,6 +171,24 @@ impl Meta {
             .collect();
 
         return matches;
+    }
+
+    pub fn find_one(&self, source: MetaSource, tag: &str) -> Result<MetaAttribute, MetaError> {
+        let values: Vec<MetaAttribute> = self.0.clone();
+
+        let matches: Vec<MetaAttribute> = values
+            .iter()
+            .cloned()
+            .filter(|x|
+                x.source == source && 
+                x.tag == tag)
+            .collect();
+
+        if matches.len() == 0 {
+            return Err(MetaError::from(format!("could not find meta for tag: {}", tag)));
+        }
+        
+        return Ok(matches.first().cloned().unwrap());
     }
 }
 
@@ -179,6 +224,12 @@ pub enum MetaType {
     Rational(MetaValue<f64>),
     Int64(MetaValue<i64>),
     UInt64(MetaValue<u64>),
+}
+
+impl Default for MetaType {
+    fn default() -> Self {
+        MetaType::String(MetaValue{ value: "".to_owned() })
+    }
 }
 
 impl From<MetaValue<String>> for MetaType {
@@ -276,6 +327,15 @@ impl From<i64> for MetaValue<i64> {
 impl From<u64> for MetaValue<u64> {
     fn from(value: u64) -> Self {
         return Self{value};
+    }
+}
+
+impl From<MetaType> for u64 {
+    fn from(value: MetaType) -> Self {
+        match value {
+            crate::meta::MetaType::UInt64(x) => x.value,
+            _ => 0
+        }
     }
 }
 

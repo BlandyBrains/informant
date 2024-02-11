@@ -1,6 +1,6 @@
 use std::result::Result;
 use image::{GenericImageView, DynamicImage};
-use crate::{meta::{MetaAttribute, MetaSource, MetaValue, MetaType, MetaFormat}, FromFile, Extractor, Meta};
+use crate::{meta::{MetaAttribute, MetaSource, MetaValue, MetaType}, FromFile, Extractor, Meta};
 
 pub struct CommonImageMeta {
     path: String
@@ -17,14 +17,12 @@ impl Extractor for CommonImageMeta {
         let (width, height) = dyn_img.dimensions();
     
         meta.add(MetaAttribute { 
-            format: MetaFormat::Image,
             source: MetaSource::Basic,
             tag: "height".to_owned(), 
             value: MetaType::UInt64(MetaValue::from(u64::from(height)))
         });
 
         meta.add(MetaAttribute { 
-            format: MetaFormat::Image, 
             source: MetaSource::Basic,
             tag: "width".to_owned(), 
             value: MetaType::UInt64(MetaValue::from(u64::from(width)))

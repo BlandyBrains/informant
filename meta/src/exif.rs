@@ -3,7 +3,7 @@ use std::result::Result;
 use exif::{Value, Tag, In, Exif, Reader};
 
 use crate::{FromFile, Extractor as CoreExtractor, Meta};
-use crate::meta::{MetaAttribute, MetaSource, MetaType, MetaValue, MetaFormat};
+use crate::meta::{MetaAttribute, MetaSource, MetaType, MetaValue};
 
 
 /// Common EXIF Extractor Func
@@ -35,7 +35,6 @@ where T:Clone, MetaType: From<MetaValue<T>> {
     match extractor(exif, tag){
         Some(m) => {
             meta.add(MetaAttribute { 
-                format: MetaFormat::Image,
                 source: MetaSource::Exif,
                 tag: tag.to_string(),
                 value: MetaType::from(m),  

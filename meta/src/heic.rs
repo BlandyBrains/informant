@@ -1,5 +1,5 @@
 use libheif_rs::{HeifContext, ImageHandle};
-use crate::{meta::{MetaAttribute, MetaFormat, MetaSource, MetaType, MetaValue}, FromFile, Extractor, Meta};
+use crate::{meta::{MetaAttribute, MetaSource, MetaType, MetaValue}, FromFile, Extractor, Meta};
 
 
 pub struct Heic{ path: String }
@@ -19,14 +19,12 @@ impl Extractor for Heic {
         let handle: ImageHandle<'_> = ctx.primary_image_handle()?;
 
         meta.add(MetaAttribute { 
-            format: MetaFormat::Image,
             source: MetaSource::Heic, 
             tag: "height".to_owned(), 
             value: MetaType::UInt64(MetaValue::from(u64::from(handle.height())))
         });
 
         meta.add(MetaAttribute { 
-            format: MetaFormat::Image,
             source: MetaSource::Heic, 
             tag: "width".to_owned(), 
             value: MetaType::UInt64(MetaValue::from(u64::from(handle.width())))
