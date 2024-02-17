@@ -140,7 +140,11 @@ impl Meta {
             match e.extract(&mut s) {
                 Ok(_) => (),
                 // todo - convert to debug error
-                Err(e) => println!("extractor error: {:#?}", e)
+                Err(e) => {
+                    // todo - improve for better handling
+                    // detach the Meta creation from the extractor processing.
+                    eprintln!("extractor error: {:#?}", e)
+                }
             }
         }
 
