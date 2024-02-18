@@ -169,8 +169,7 @@ impl Meta {
         let values: Vec<MetaAttribute> = self.0.clone();
 
         let matches: Vec<MetaAttribute> = values
-            .iter()
-            .cloned()
+            .into_iter()
             .filter(|x| x.tag == tag)
             .collect();
 
@@ -181,8 +180,7 @@ impl Meta {
         let values: Vec<MetaAttribute> = self.0.clone();
 
         let matches: Vec<MetaAttribute> = values
-            .iter()
-            .cloned()
+            .into_iter()
             .filter(|x|
                 x.source == source && 
                 x.tag == tag)
@@ -299,6 +297,7 @@ pub struct MetaValue<T> {
 
 impl From<String> for MetaValue<String> {
     fn from(value: String) -> Self {
+        // General regex - for?
         let re: Regex = Regex::new(r"([\w\d\-])+.*([\w\d\.])|[\w\d]{1}").unwrap();
         
         let mut v: &str = value.as_str();
@@ -306,7 +305,7 @@ impl From<String> for MetaValue<String> {
         
         match re.find(v) {
             Some(m) => {
-                return Self{value: m.as_str().to_owned()};
+                return Self{value: m.as_str().replace("\0", "").to_owned()}; // replace null character \0
             },
             None => {
                 println!("failed meta regex {:#?}", v);
