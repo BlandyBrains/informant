@@ -243,7 +243,10 @@ impl CoreExtractor for ExifExtractor {
         extract(&exif, Tag::LightSource, &extract_str, meta);
         extract(&exif, Tag::Flash, &extract_str, meta);
         extract(&exif, Tag::SubjectArea, &extract_str, meta);
-        extract(&exif, Tag::MakerNote, &extract_str, meta);
+        
+        // ignore MakerNote - corrupt data
+        // extract(&exif, Tag::MakerNote, &extract_str, meta);
+        
         extract(&exif, Tag::UserComment, &extract_str, meta);
         extract(&exif, Tag::SubSecTime, &extract_str, meta);
         extract(&exif, Tag::SubSecTimeOriginal, &extract_str, meta);
