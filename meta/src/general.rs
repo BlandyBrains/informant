@@ -46,7 +46,18 @@ impl Extractor for General {
         
         // Extension
         let path: &Path = Path::new(&self.path);
-        let extension: &str = path.extension().and_then(|ext| ext.to_str()).unwrap();
+        let original_extension: &str = path.extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap();
+
+        let binding: String = original_extension.to_lowercase();
+        let mut extension: &str = binding.as_ref();
+
+        // Normalize extension
+        extension = match extension {
+            "jpeg" => "jpg",
+            x => x
+        };
 
         // MetaType
         let meta_class: MetaClass = self.get_class(extension);

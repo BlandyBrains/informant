@@ -194,6 +194,22 @@ impl Meta {
     }
 }
 
+impl Iterator for Meta {
+    type Item = MetaAttribute;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0.pop()
+    }
+}
+
+
+impl From<String> for Meta {
+    fn from(value: String) -> Self {
+        todo!()
+    }
+}
+
+
 /// TODO - Untag the MetaType and MetaValue enums
 /// This will clean up the value from this
 /// {
@@ -262,7 +278,9 @@ impl From<MetaType> for String {
     fn from(t: MetaType) -> Self {
         let result = match t {
             MetaType::String(x) => x.value,
-            _ => "".to_owned()
+            MetaType::Int64(x) => x.value.to_string(),
+            MetaType::UInt64(x) => x.value.to_string(),
+            MetaType::Rational(x) => x.value.to_string()
         };
         return result;
     }
