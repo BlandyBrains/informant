@@ -43,6 +43,9 @@ id3 = [
 hash = [
     "dep:blake3"
 ]
+basic = [
+
+]
 
 [dependencies]
 regex = { version = "1.7.1" }

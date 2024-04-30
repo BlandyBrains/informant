@@ -194,6 +194,12 @@ impl Meta {
     }
 }
 
+impl Default for Meta {
+    fn default() -> Self {
+        Self(Default::default())
+    }
+}
+
 impl Iterator for Meta {
     type Item = MetaAttribute;
 
@@ -201,7 +207,6 @@ impl Iterator for Meta {
         self.0.pop()
     }
 }
-
 
 impl From<String> for Meta {
     fn from(value: String) -> Self {
