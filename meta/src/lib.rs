@@ -37,7 +37,7 @@ pub trait FromFile {
 
 mod general;
 
-#[cfg(feature="heic")]
+#[cfg(feature="libheif-rs")]
 mod heic;
 
 #[cfg(feature = "ape")]
@@ -46,7 +46,7 @@ mod ape;
 #[cfg(feature = "id3")]
 mod id3;
 
-#[cfg(feature = "exif")]
+#[cfg(feature = "kamadak-exif")]
 mod exif;
 
 #[cfg(feature = "matroska")]
@@ -55,7 +55,7 @@ mod matroska;
 #[cfg(feature = "mp4")]
 mod mp4;
 
-#[cfg(feature = "hash")]
+#[cfg(feature = "blake3")]
 mod hash;
 
 
