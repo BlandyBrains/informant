@@ -12,19 +12,41 @@ path = "src/lib.rs"
 default = [
     "all"
 ]
-
 slim = [
-    "dep:image"
+    "image"
 ]
-
 all = [
-    "dep:ape", 
-    "dep:id3",
-    "dep:kamadak-exif",
+    "ape", 
+    "id3",
+    "exif",
+    "image",
+    "mp4",
+    "matroska",
+    "heic",
+    "hash"
+]
+image = [
     "dep:image",
-    "dep:mp4",
-    "dep:matroska",
-    "dep:libheif-rs",
+]
+exif = [
+    "dep:kamadak-exif"
+]
+heic = [
+    "dep:libheif-rs"
+]
+mp4 = [
+    "dep:mp4"
+]
+matroska = [
+    "dep:matroska"
+]
+ape = [
+    "dep:ape"
+]
+id3 = [
+    "dep:id3"
+]
+hash = [
     "dep:blake3"
 ]
 
