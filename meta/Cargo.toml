@@ -1,6 +1,6 @@
 [package]
 name = "meta"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["BlandyBrains <NothingsBland@proton.me>"]
 edition = "2021"
 
@@ -10,18 +10,18 @@ path = "src/lib.rs"
 
 [features]
 default = [
-    "image"
+    "dep:image"
 ]
 
 all = [
-    "ape", 
-    "id3",
-    "kamadak-exif",
-    "image",
-    "mp4",
-    "matroska",
-    "libheif-rs",
-    "blake3"
+    "dep:ape", 
+    "dep:id3",
+    "dep:kamadak-exif",
+    "dep:image",
+    "dep:mp4",
+    "dep:matroska",
+    "dep:libheif-rs",
+    "dep:blake3"
 ]
 
 [dependencies]
