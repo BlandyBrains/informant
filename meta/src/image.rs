@@ -1,4 +1,3 @@
-use std::result::Result;
 use image::{GenericImageView, DynamicImage};
 use crate::{meta::{MetaAttribute, MetaSource, MetaValue, MetaType}, FromFile, Extractor, Meta};
 
