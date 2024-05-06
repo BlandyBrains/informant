@@ -335,8 +335,8 @@ impl From<String> for MetaValue<String> {
                 return Self{value: m.as_str().to_owned()}; 
             },
             None => {
-                println!("failed meta regex {:#?}", v);
-                return Self{value: v.to_owned()};
+                println!("failed meta regex {:#?}", v2);
+                return Self{value: v2.to_owned()};
             }
         }
     }
