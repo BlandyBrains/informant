@@ -325,10 +325,14 @@ impl From<String> for MetaValue<String> {
         
         let mut v: &str = value.as_str();
         v = v.split(",").collect::<Vec<&str>>().first().unwrap();
+
+        // replace null character \0
+        // replace \"
+        let v2: String = v.clone().replace("\"", "").replace("\0", "");
         
-        match re.find(v) {
+        match re.find(&v2) {
             Some(m) => {
-                return Self{value: m.as_str().replace("\0", "").to_owned()}; // replace null character \0
+                return Self{value: m.as_str().to_owned()}; 
             },
             None => {
                 println!("failed meta regex {:#?}", v);
