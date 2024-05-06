@@ -285,7 +285,14 @@ impl From<MetaType> for String {
             MetaType::String(x) => x.value,
             MetaType::Int64(x) => x.value.to_string(),
             MetaType::UInt64(x) => x.value.to_string(),
-            MetaType::Rational(x) => x.value.to_string()
+            MetaType::Rational(x) => {
+                if x.value.is_nan(){
+                    return "NaN".to_owned();
+                }
+                
+                println!("Rational: {:#?}", x.value);
+                x.value.to_string()
+            }
         };
         return result;
     }
