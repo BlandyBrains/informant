@@ -10,6 +10,7 @@ path = "src/lib.rs"
 
 [features]
 default = [
+    "slim"
 ]
 slim = [
     "image"

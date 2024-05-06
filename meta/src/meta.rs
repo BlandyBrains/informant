@@ -209,7 +209,7 @@ impl Iterator for Meta {
 }
 
 impl From<String> for Meta {
-    fn from(value: String) -> Self {
+    fn from(_value: String) -> Self {
         todo!()
     }
 }
@@ -321,21 +321,27 @@ pub struct MetaValue<T> {
 impl From<String> for MetaValue<String> {
     fn from(value: String) -> Self {
         // General regex - for?
-        let re: Regex = Regex::new(r"([\w\d\-])+.*([\w\d\.])|[\w\d]{1}").unwrap();
+        let re: Regex = Regex::new(r#"([\w\d\-])+.*([\w\d\.])|[\w\d]{1}"#).unwrap();
         
         let mut v: &str = value.as_str();
         v = v.split(",").collect::<Vec<&str>>().first().unwrap();
 
         // replace null character \0
         // replace \"
-        let v2: String = v.clone().replace("\"", "").replace("\0", "");
+        let v2: String = v
+            .replace("\0", "")
+            .replace("\"", "")
+            .to_owned();
         
         match re.find(&v2) {
             Some(m) => {
                 return Self{value: m.as_str().to_owned()}; 
             },
             None => {
-                println!("failed meta regex {:#?}", v2);
+                if v2.len() > 0 {
+                    println!("failed meta regex {}", v2);
+                }
+                
                 return Self{value: v2.to_owned()};
             }
         }
@@ -394,6 +400,7 @@ mod test {
         samples.push(("Canon EOS-1D Mark II", "Canon EOS-1D Mark II"));
         samples.push(("            SOME PADDED VALUE           ", "SOME PADDED VALUE"));
         samples.push(("\"-5\"", "-5"));
+        samples.push(("\"\"", ""));
         
         for s in samples {
             let actual: MetaValue<String> = MetaValue::from(s.0.to_owned());
