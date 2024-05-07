@@ -289,8 +289,6 @@ impl From<MetaType> for String {
                 if x.value.is_nan(){
                     return "NaN".to_owned();
                 }
-                
-                println!("Rational: {:#?}", x.value);
                 x.value.to_string()
             }
         };
