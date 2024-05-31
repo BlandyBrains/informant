@@ -8,16 +8,16 @@ pub struct General { path: String }
 impl General {
     fn get_class(&self, extension: &str) -> MetaClass {
         match extension {
-            "mp4" | "mov" | "m4v" | "mkv" => {
+            "mp4" | "mov" | "m4v" | "mkv" | "3gp" | "3gpp" | "avi" | "flv" | "wmv" | "mpe" | "mpeg" | "mpg" | "webm" | "vob" | "mts" => {
                 return MetaClass::Video;
             },
             "amr" | "m4a" | "mp3" | "wav" | "flac" | "wma" | "m4r" => {
                 return MetaClass::Audio;
             },
-            "heic" | "heif" | "jpeg" | "jpg" | "png" | "raf" | "tif" | "tiff" | "cr2" | "jfif" => {
+            "heic" | "heif" | "jpeg" | "jpg" | "png" | "dng" | "gif" | "hdr" | "raf" | "tif" | "tiff" | "cr2" | "jfif" | "svg" | "mp" | "pcx" | "bmp" => {
                 return MetaClass::Image;
             },
-            "doc" | "docx" | "pdf" => {
+            "doc" | "docx" | "pdf" | "xls" | "pptx" | "ppt" | "txt" | "xml" => {
                 return MetaClass::Document;
             }
             _ => {
@@ -56,6 +56,7 @@ impl Extractor for General {
         // Normalize extension
         extension = match extension {
             "jpeg" => "jpg",
+            "mpg" => "mpeg",
             x => x
         };
 
