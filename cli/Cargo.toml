@@ -1,5 +1,5 @@
 [package]
-name = "informant"
+name = "cli"
 version = "0.1.1"
 authors = ["BlandyBrains <NothingsBland@proton.me>"]
 edition = "2021"
@@ -9,14 +9,17 @@ name = "informant"
 path = "src/main.rs"
 
 [features]
-default = ["store"]
-
-store = []
+default = []
 
 [dependencies]
 meta = { path = "../meta" }
+storage = { path = "../storage" }
+clap = { version = "4.5.20", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.89" }
+rexiv2 = { version = "0.10.0" }
+chrono = { version = "0.4" }
+uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
 uuid = { version = "1.1.2", features = ["v4", "fast-rng", "macro-diagnostics" ] }

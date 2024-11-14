@@ -10,6 +10,9 @@ impl FromFile for CommonImageMeta {
     }
 }
 impl Extractor for CommonImageMeta {
+    fn name(&self) -> String {
+        return "IMAGE".to_string();
+    }
     fn extract(&self, meta: &mut Meta) -> Result<(), crate::MetaError> {
         let dyn_img: DynamicImage = image::open(self.path.to_string())?;
 
@@ -34,10 +37,18 @@ impl Extractor for CommonImageMeta {
 #[cfg(test)]
 mod test {
     use crate::{MetaError, FromFile, Extractor, Meta};
+    type TestError = Box<dyn std::error::Error + 'static>;
 
     use super::CommonImageMeta;
 
     const TEST_IMAGE: &str = "../testdata/Image/test.jpg"; 
+
+    fn get_file_meta(file: &str) -> Result<Meta, TestError> {
+        let mut meta: Meta = Meta::new();
+        let extractor: CommonImageMeta = CommonImageMeta::file(file);
+        extractor.extract(&mut meta).unwrap();
+        Ok(meta)
+    }
 
     #[test]
     fn test_parse() {
@@ -70,5 +81,11 @@ mod test {
                 panic!("{:#?}", e);
             }
         }
+    }
+
+    #[test]
+    fn test_heif_file() {
+        let meta: Meta = get_file_meta("../testdata/original/fails_common_image_extractor.heic").unwrap();
+
     }
 }

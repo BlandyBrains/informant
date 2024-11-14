@@ -1,0 +1,75 @@
+FROM debian:trixie-slim as build
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get upgrade -y
+
+RUN apt install build-essential cmake wget git zlib1g-dev libclang-dev -y
+
+WORKDIR /opt
+
+# Install Rust
+RUN wget -qO - https://sh.rustup.rs >> rust-install.sh
+RUN chmod +x rust-install.sh
+ENV RUSTUP_USE_CURL=1 
+RUN ./rust-install.sh -y
+
+# RUN dnf install -y openssl-devel
+
+WORKDIR /opt
+
+# Build libde265 (required for libheif)
+RUN git clone https://github.com/strukturag/libde265.git
+WORKDIR /opt/libde265
+# RUN git checkout v1.0.15
+RUN mkdir build
+WORKDIR /opt/libde265/build
+RUN cmake .. && make && make install
+
+WORKDIR /opt
+
+# Build libheif (for HEIF support)
+RUN git clone https://github.com/strukturag/libheif.git
+WORKDIR /opt/libheif
+RUN git checkout v1.17.0
+RUN mkdir build
+WORKDIR /opt/libheif/build
+RUN cmake --preset=release .. && make && make install
+
+# Build and Install gexiv2
+RUN apt install libgexiv2-dev -y
+
+# RUN git clone https://gitlab.gnome.org/GNOME/gexiv2
+# WORKDIR /opt/gexiv2
+# RUN meson build
+# RUN ninja -C build install
+
+WORKDIR /opt
+
+# COPY Source
+COPY cli /opt/cli
+COPY meta /opt/meta
+COPY storage /opt/storage
+COPY Cargo.toml /opt
+
+# Build Project
+RUN . ~/.cargo/env
+RUN /root/.cargo/bin/cargo build --release
+
+# Final runtime image
+FROM debian:trixie-slim as final
+
+RUN apt-get update && apt-get upgrade -y
+
+COPY --from=build /usr/local/lib/libde265.so /usr/local/lib/
+COPY --from=build /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/
+COPY --from=build /opt/target/release/informant /usr/bin
+
+RUN ln -s /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/libheif.so.1
+RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+RUN ldconfig
+
+RUN apt install libgexiv2-dev -y
+
+# CMD informant api -c /opt/configs/dev.toml

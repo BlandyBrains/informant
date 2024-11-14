@@ -34,6 +34,10 @@ impl FromFile for General {
 }
 
 impl Extractor for General {
+    fn name(&self) -> String {
+        return "GENERAL".to_string();
+    }
+
     fn extract(&self, meta: &mut Meta) -> Result<(), crate::MetaError> {
 
         // File Size

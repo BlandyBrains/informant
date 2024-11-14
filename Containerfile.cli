@@ -1,0 +1,73 @@
+FROM rockylinux:9.3 as build
+
+RUN dnf update -y && \
+    dnf install -y wget git && \
+    dnf groupinstall -y "Development Tools"
+
+WORKDIR /opt
+
+# Install Rust
+RUN wget -qO - https://sh.rustup.rs >> rust-install.sh
+RUN chmod +x rust-install.sh
+ENV RUSTUP_USE_CURL=1 
+RUN ./rust-install.sh -y
+
+RUN dnf install -y openssl-devel
+
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0.tar.gz
+RUN tar -zxvf cmake-3.24.0.tar.gz
+WORKDIR /opt/cmake-3.24.0
+RUN ./bootstrap
+RUN make
+RUN make install
+
+WORKDIR /opt
+
+# Build libde265 (required for libheif)
+RUN git clone https://github.com/strukturag/libde265.git
+WORKDIR /opt/libde265
+RUN mkdir build
+WORKDIR /opt/libde265/build
+RUN cmake .. && make && make install
+
+WORKDIR /opt
+
+# Build libheif (for HEIF support)
+RUN git clone https://github.com/strukturag/libheif.git
+WORKDIR /opt/libheif
+RUN mkdir build
+WORKDIR /opt/libheif/build
+RUN cmake --preset=release .. && make && make install
+
+# Build and Install gexiv2
+RUN dnf install epel-release meson ninja-build -y
+RUN git clone https://gitlab.gnome.org/GNOME/gexiv2
+WORKDIR /opt/gexiv2
+RUN meson build
+RUN ninja -C build install
+
+WORKDIR /opt
+
+# COPY Source
+COPY cli /opt/cli
+COPY meta /opt/meta
+COPY storage /opt/storage
+COPY Cargo.toml /opt
+
+# Build Project
+RUN source ~/.cargo/env && cargo build --release
+
+# Final runtime image
+FROM rockylinux:9.3-minimal as final
+
+COPY --from=build /usr/local/lib64/libde265.so /usr/local/lib/
+COPY --from=build /usr/local/lib64/libheif.so.1.17.6 /usr/local/lib/
+COPY --from=build /opt/configs /opt/configs
+COPY --from=build /opt/target/release/informant /usr/bin
+
+RUN ln -s /usr/local/lib/libheif.so.1.17.6 /usr/local/lib/libheif.so.1
+RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
+RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+RUN ldconfig
+
+# CMD dewey api -c /opt/configs/dev.toml

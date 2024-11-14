@@ -331,6 +331,10 @@ impl FromFile for MP4 {
     }
 }
 impl Extractor for MP4 {
+    fn name(&self) -> String {
+        return "VIDEO".to_string();
+    }
+
     fn extract(&self, meta: &mut Meta) -> Result<(), Box<dyn std::error::Error + 'static>> {
         let file: File = std::fs::File::open(self.path.to_string())?;
         let size: u64 = file.metadata()?.len();
