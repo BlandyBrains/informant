@@ -188,12 +188,17 @@ impl FromFile for ExifExtractor {
 }
 
 impl CoreExtractor for ExifExtractor {
+    fn name(&self) -> String {
+        return "EXIF".to_string();
+    }
+    
     fn extract(&self, meta: &mut Meta) -> Result<(), crate::MetaError> {
         let file: File = std::fs::File::open(&self.path)?;
         let mut buf_reader: BufReader<&File> = std::io::BufReader::new(&file);
         let exif_reader: Reader = exif::Reader::new();
+        
         let exif: Exif = exif_reader.read_from_container(&mut buf_reader)?;
-    
+
         // Tiff Details
         extract(&exif, Tag::ImageWidth, &extract_str, meta);
         extract(&exif, Tag::ImageLength, &extract_str, meta);
@@ -373,7 +378,17 @@ mod test {
     use crate::{Meta, FromFile, Extractor};
     use crate::exif::ExifExtractor;
 
-    const TEST_IMAGE: &str = "../testdata/Image/test2.jpg"; 
+    type TestError = Box<dyn std::error::Error + 'static>;
+
+    const TEST_IMAGE: &str = "../testdata/png/00bd9af4-cf55-4186-99e4-c3526aa86279.png"; 
+
+    fn get_file_meta(file: &str) -> Result<Meta, TestError> {
+        let mut meta: Meta = Meta::new();
+        let extractor: ExifExtractor = ExifExtractor::file(file);
+        extractor.extract(&mut meta).unwrap();
+        Ok(meta)
+    }
+
 
     #[test]
     fn test_parse() {
@@ -415,4 +430,26 @@ mod test {
         }
     }
 
+    #[test]
+    fn test_regex() {
+        let meta: Meta = get_file_meta("../testdata/meta/regex_check.heic").unwrap();
+
+        // todo confirm we can serde
+        // println!("{:#?}", meta);
+        let j = match serde_json::to_string(&meta){
+            Ok(x) => x,
+            Err(e) => {
+                panic!("{}", e);
+            }
+        };
+
+        meta
+            .find("Model")
+            .first()
+            .map(|x| println!("Model: {:#?}", x));
+
+        // Print, write to a file, or send to an HTTP server.
+        println!("{:#?}", j);
+
+    }
 }

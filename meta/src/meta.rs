@@ -2,7 +2,7 @@ use std::hash::{Hash, Hasher};
 use regex::Regex;
 use serde::{Serialize, Deserialize};
 
-use crate::{get_extractors, MetaError, Extractor};
+use crate::{get_extractors, Extractors, MetaError};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum MetaClass {
@@ -125,30 +125,15 @@ impl Hash for MetaAttribute {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct Meta(Vec<MetaAttribute>);
+pub struct Meta(pub Vec<MetaAttribute>);
 impl Meta {
     pub fn new() -> Self {
         Self(Vec::new())
     }
 
     pub fn capture(file: &str) -> Result<Self, MetaError> {
-        let mut s: Meta = Self(Vec::new());
-
-        let extractors: Vec<Box<dyn Extractor>> = get_extractors(file)?;
-        
-        for e in extractors {
-            match e.extract(&mut s) {
-                Ok(_) => (),
-                // todo - convert to debug error
-                Err(e) => {
-                    // todo - improve for better handling
-                    // detach the Meta creation from the extractor processing.
-                    eprintln!("extractor error: {:#?}", e)
-                }
-            }
-        }
-
-        Ok(s)
+        let extractors: Extractors = get_extractors(file)?;
+        Ok(extractors.extract()?)
     }
 
     pub fn add(&mut self, attribute: MetaAttribute){
@@ -326,7 +311,7 @@ pub struct MetaValue<T> {
 impl From<String> for MetaValue<String> {
     fn from(value: String) -> Self {
         // General regex - for?
-        let re: Regex = Regex::new(r#"([\w\d\-])+.*([\w\d\.])|[\w\d]{1}"#).unwrap();
+        let re: Regex = Regex::new(r#"([\w\d\-])+.*([\w\d\.\)])|[\w\d]{1}"#).unwrap();
         
         let mut v: &str = value.as_str();
         v = v.split(",").collect::<Vec<&str>>().first().unwrap();
@@ -336,6 +321,8 @@ impl From<String> for MetaValue<String> {
         let v2: String = v
             .replace("\0", "")
             .replace("\"", "")
+            .replace("`", "")
+            .trim()
             .to_owned();
         
         match re.find(&v2) {
@@ -344,11 +331,10 @@ impl From<String> for MetaValue<String> {
             },
             None => {
                 if v2.len() > 0 {
-                    println!("failed meta regex {}", v2);
+                    // println!("failed meta regex {} {}", v, v2);
                 }
                 
                 return Self{value: "".to_owned()};
-                // return Self{value: v2.to_owned()};
             }
         }
     }

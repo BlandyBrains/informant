@@ -1,0 +1,20 @@
+[package]
+name = "storage"
+version = "0.1.1"
+authors = ["BlandyBrains <NothingsBland@proton.me>"]
+edition = "2021"
+
+[features]
+default = []
+
+[dependencies]
+meta = { path = "../meta" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0.89" }
+rusqlite = { version = "0.32.0", features = ["bundled", "trace"] }
+rand = { version = "0.8" }
+log = { version = "0.4" }
+env_logger = { version = "0.10" }
+
+[dev-dependencies]
+uuid = { version = "1.1.2", features = ["v4", "fast-rng", "macro-diagnostics" ] }

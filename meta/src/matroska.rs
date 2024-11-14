@@ -135,6 +135,10 @@ impl FromFile for Matroska {
     }
 }
 impl Extractor for Matroska {
+    fn name(&self) -> String {
+        return "VIDEO".to_string();
+    }
+    
     fn extract(&self, meta: &mut Meta) -> Result<(), MetaError> {
         Ok(self.from_path(&self.path, meta)?)
     }

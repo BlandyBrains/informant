@@ -2,6 +2,7 @@
 resolver = "1"
 
 members = [
-    "informant",
-    "meta"
+    "cli",
+    "meta",
+    "storage"
 ]
