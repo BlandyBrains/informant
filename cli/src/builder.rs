@@ -58,7 +58,9 @@ impl AssetParts {
         
         if !is_device_mapped{
             path.push("Format");
-            path.push(format!("{:05}", partition.unwrap().partition));
+            if partition.is_some() {
+                path.push(format!("{:05}", partition.unwrap().partition));
+            }
         }
 
         path.push(self.extension.to_lowercase());
