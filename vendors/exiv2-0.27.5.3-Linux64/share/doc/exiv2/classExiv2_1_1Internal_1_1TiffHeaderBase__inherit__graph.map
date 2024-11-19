@@ -1,7 +1,0 @@
-<map id="Exiv2::Internal::TiffHeaderBase" name="Exiv2::Internal::TiffHeaderBase">
-<area shape="rect" id="node1" title="Abstract base class defining the interface of an image header. Used internally by classes for TIFF&#45;ba..." alt="" coords="5,81,229,108"/>
-<area shape="rect" id="node2" href="$classExiv2_1_1Internal_1_1Cr2Header.html" title="Canon CR2 header structure." alt="" coords="280,5,473,32"/>
-<area shape="rect" id="node3" href="$classExiv2_1_1Internal_1_1OrfHeader.html" title="Olympus ORF header structure." alt="" coords="281,56,472,83"/>
-<area shape="rect" id="node4" href="$classExiv2_1_1Internal_1_1Rw2Header.html" title="Panasonic RW2 header structure." alt="" coords="277,107,476,133"/>
-<area shape="rect" id="node5" href="$classExiv2_1_1Internal_1_1TiffHeader.html" title="Standard TIFF header structure." alt="" coords="281,157,473,184"/>
-</map>

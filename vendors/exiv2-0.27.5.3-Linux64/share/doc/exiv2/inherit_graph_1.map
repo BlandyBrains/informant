@@ -1,6 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" title="STL class." alt="" coords="5,42,120,69"/>
-<area shape="rect" id="node2" href="$classExiv2_1_1AnyError.html" title="Error class interface. Allows the definition and use of a hierarchy of error classes which can all be..." alt="" coords="196,13,319,39"/>
-<area shape="rect" id="node4" href="$classExiv2_1_1Internal_1_1LensInfoNotFound.html" title=" " alt="" coords="168,64,347,105"/>
-<area shape="rect" id="node3" href="$classExiv2_1_1BasicError.html" title="Simple error class used for exceptions. An output operator is provided to print errors to a stream." alt="" coords="395,5,537,47"/>
-</map>
