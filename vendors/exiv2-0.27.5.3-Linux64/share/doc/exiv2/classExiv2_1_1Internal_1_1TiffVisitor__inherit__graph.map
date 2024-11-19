@@ -1,0 +1,8 @@
+<map id="Exiv2::Internal::TiffVisitor" name="Exiv2::Internal::TiffVisitor">
+<area shape="rect" id="node1" title="Abstract base class defining the interface for TIFF composite visitors (Visitor pattern)" alt="" coords="5,107,192,133"/>
+<area shape="rect" id="node2" href="$classExiv2_1_1Internal_1_1TiffCopier.html" title="Copy all image tags from the source tree (the tree that is traversed) to a target tree,..." alt="" coords="246,5,433,32"/>
+<area shape="rect" id="node3" href="$classExiv2_1_1Internal_1_1TiffDecoder.html" title="TIFF composite visitor to decode metadata from the TIFF tree and add it to an Image,..." alt="" coords="240,56,439,83"/>
+<area shape="rect" id="node4" href="$classExiv2_1_1Internal_1_1TiffEncoder.html" title="TIFF composite visitor to encode metadata from an image to the TIFF tree. The metadata containers and..." alt="" coords="241,107,438,133"/>
+<area shape="rect" id="node5" href="$classExiv2_1_1Internal_1_1TiffFinder.html" title="Search the composite for a component with tag and group. Return a pointer to the component or 0,..." alt="" coords="247,157,432,184"/>
+<area shape="rect" id="node6" href="$classExiv2_1_1Internal_1_1TiffReader.html" title="TIFF composite visitor to read the TIFF structure from a block of memory and build the composite from..." alt="" coords="244,208,435,235"/>
+</map>

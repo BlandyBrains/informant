@@ -40,6 +40,7 @@ WORKDIR /opt/libheif/build
 RUN cmake --preset=release .. && make && make install
 
 # Build and Install gexiv2
+RUN dnf update -y
 RUN dnf install epel-release meson ninja-build -y
 RUN git clone https://gitlab.gnome.org/GNOME/gexiv2
 WORKDIR /opt/gexiv2
@@ -58,16 +59,16 @@ COPY Cargo.toml /opt
 RUN source ~/.cargo/env && cargo build --release
 
 # Final runtime image
-FROM rockylinux:9.3-minimal as final
+# FROM rockylinux:9.3-minimal as final
 
-COPY --from=build /usr/local/lib64/libde265.so /usr/local/lib/
-COPY --from=build /usr/local/lib64/libheif.so.1.17.6 /usr/local/lib/
-COPY --from=build /opt/configs /opt/configs
-COPY --from=build /opt/target/release/informant /usr/bin
+# COPY --from=build /usr/local/lib64/libde265.so /usr/local/lib/
+# COPY --from=build /usr/local/lib64/libheif.so.1.17.6 /usr/local/lib/
+# COPY --from=build /opt/configs /opt/configs
+# COPY --from=build /opt/target/release/informant /usr/bin
 
-RUN ln -s /usr/local/lib/libheif.so.1.17.6 /usr/local/lib/libheif.so.1
-RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
-RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
-RUN ldconfig
+# RUN ln -s /usr/local/lib/libheif.so.1.17.6 /usr/local/lib/libheif.so.1
+# RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
+# RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+# RUN ldconfig
 
 # CMD dewey api -c /opt/configs/dev.toml

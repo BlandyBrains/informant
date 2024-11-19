@@ -1,0 +1,85 @@
+FROM fedora-minimal:40 as build
+
+# install dnf
+RUN microdnf install dnf -y
+
+RUN dnf update -y
+
+RUN dnf install wget git -y && dnf groupinstall -y "Development Tools"
+
+WORKDIR /opt
+
+# Install Rust
+RUN wget -qO - https://sh.rustup.rs >> rust-install.sh
+RUN chmod +x rust-install.sh
+ENV RUSTUP_USE_CURL=1 
+RUN ./rust-install.sh -y
+
+RUN dnf install -y gcc-c++ cmake openssl-devel
+
+WORKDIR /opt
+
+# Build libde265 (required for libheif)
+RUN git clone https://github.com/strukturag/libde265.git
+WORKDIR /opt/libde265
+RUN mkdir build
+WORKDIR /opt/libde265/build
+RUN cmake .. && make && make install
+
+WORKDIR /opt
+
+# Build libheif (for HEIF support)
+RUN git clone https://github.com/strukturag/libheif.git
+WORKDIR /opt/libheif
+RUN mkdir build
+WORKDIR /opt/libheif/build
+RUN cmake --preset=release .. && make && make install
+
+RUN dnf install ccache clang gmock glib2-devel brotli-devel libcurl expat-devel gtest-devel inih-devel libssh-devel libxml2 zlib-devel python3 -y
+
+WORKDIR /opt
+
+# Build exiv2
+RUN git clone https://github.com/Exiv2/exiv2.git
+WORKDIR /opt/exiv2
+RUN mkdir build
+WORKDIR /opt/exiv2/build
+RUN cmake -S .. -DCMAKE_BUILD_TYPE=Release
+RUN make && make install
+
+WORKDIR /opt
+
+# Build gexiv2
+RUN dnf install meson ninja-build gobject-introspection gobject-introspection-devel vala python3-gobject -y
+RUN git clone https://gitlab.gnome.org/GNOME/gexiv2.git
+WORKDIR /opt/gexiv2
+RUN meson setup build
+WORKDIR /opt/gexiv2/build
+RUN ninja install
+
+WORKDIR /opt
+
+# COPY Source
+COPY cli /opt/cli
+COPY meta /opt/meta
+COPY storage /opt/storage
+COPY Cargo.toml /opt
+
+RUN dnf install clang -y 
+
+# Build Project
+RUN source ~/.cargo/env && cargo build --release
+
+RUN cp /opt/target/release/informant /usr/bin
+RUN echo "/usr/local/lib64/" > /etc/ld.so.conf.d/local.conf
+RUN ldconfig
+
+# Final runtime image
+# FROM rockylinux:9.3-minimal as final
+
+# COPY --from=build /usr/local/lib64/libde265.so /usr/local/lib/
+# COPY --from=build /usr/local/lib64/libheif.so.1.17.6 /usr/local/lib/
+# COPY --from=build /opt/configs /opt/configs
+# COPY --from=build /opt/target/release/informant /usr/bin
+
+# CMD dewey api -c /opt/configs/dev.toml

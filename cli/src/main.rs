@@ -79,9 +79,9 @@ fn main() -> Result<(), Box<dyn Error>>{
             let mut builder: AssetBuilder<Asset, AssetParts> = Builder::open(&cli.file)?.build(&db)?;
 
             // only normalize tags on applicable file types
-            if !builder.asset.extension.contains("gif") {
-                builder.normalize_tags()?;
-            }
+            // if !builder.asset.extension.contains("gif") {
+            //     builder.normalize_tags()?;
+            // }
             
             let mut real_path: PathBuf = PathBuf::from(&opts.directory);
             real_path.push(builder.asset.path.clone().unwrap());

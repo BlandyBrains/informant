@@ -5,6 +5,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get upgrade -y
 
 RUN apt install build-essential cmake wget git zlib1g-dev libclang-dev -y
+RUN apt install meson ninja-build -y
+RUN apt install ccache clang google-mock libglib2.0-dev libbrotli-dev libcurl4-openssl-dev libexpat1-dev libgtest-dev libinih-dev libssh-dev libxml2-utils libz-dev python3 zlib1g-dev -y
+
 
 WORKDIR /opt
 
@@ -14,14 +17,12 @@ RUN chmod +x rust-install.sh
 ENV RUSTUP_USE_CURL=1 
 RUN ./rust-install.sh -y
 
-# RUN dnf install -y openssl-devel
-
 WORKDIR /opt
 
 # Build libde265 (required for libheif)
 RUN git clone https://github.com/strukturag/libde265.git
 WORKDIR /opt/libde265
-# RUN git checkout v1.0.15
+RUN git checkout v1.0.15
 RUN mkdir build
 WORKDIR /opt/libde265/build
 RUN cmake .. && make && make install
@@ -36,9 +37,27 @@ RUN mkdir build
 WORKDIR /opt/libheif/build
 RUN cmake --preset=release .. && make && make install
 
-# Build and Install gexiv2
+WORKDIR /opt
+
+COPY vendors/exiv2-0.27.5.3-Linux64/lib/* /usr/local/lib
+COPY vendors/exiv2-0.27.5.3-Linux64/include/* /usr/local/include
+COPY vendors/local/libgexiv2.so /usr/lib/x86_64-linux-gnu
+
+# Build and Install Exiv2
+# RUN git clone https://github.com/Exiv2/exiv2.git
+# WORKDIR /opt/exiv2
+# RUN mkdir build
+# WORKDIR /opt/exiv2/build
+# RUN cmake -S .. -DCMAKE_BUILD_TYPE=Release && make && make install
+# RUN cmake --build build
+# RUN cmake --install build
+
+RUN apt install gobject-introspection valac python3-gi gir1.2-gtk-3.0 -y
 RUN apt install libgexiv2-dev -y
 
+WORKDIR /opt
+
+# Build and Install gexiv2
 # RUN git clone https://gitlab.gnome.org/GNOME/gexiv2
 # WORKDIR /opt/gexiv2
 # RUN meson build
@@ -55,21 +74,25 @@ COPY Cargo.toml /opt
 # Build Project
 RUN . ~/.cargo/env
 RUN /root/.cargo/bin/cargo build --release
+RUN cp /opt/target/release/informant /usr/bin
 
 # Final runtime image
-FROM debian:trixie-slim as final
+# FROM debian:trixie-slim as final
 
-RUN apt-get update && apt-get upgrade -y
+# RUN apt-get update && apt-get upgrade -y
 
-COPY --from=build /usr/local/lib/libde265.so /usr/local/lib/
-COPY --from=build /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/
-COPY --from=build /opt/target/release/informant /usr/bin
+# COPY --from=build /usr/local/lib/libde265.so /usr/local/lib/
+# COPY --from=build /usr/local/lib/libheif* /usr/local/lib/
+# COPY --from=build /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/
+# COPY --from=build /opt/target/release/informant /usr/bin
 
-RUN ln -s /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/libheif.so.1
-RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
-RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
-RUN ldconfig
+# RUN ln -s /usr/local/lib/libheif.so.1.17.0 /usr/local/lib/libheif.so.1
+# RUN ln -s /usr/local/lib/libheif.so.1 /usr/local/lib/libheif.so
+# RUN echo "/usr/local/lib" > /etc/ld.so.conf.d/local.conf
+# RUN ldconfig
 
-RUN apt install libgexiv2-dev -y
+# COPY vendors/exiv2-0.27.5.3-Linux64/lib/* /usr/local/lib
+# COPY vendors/exiv2-0.27.5.3-Linux64/include/* /usr/local/include
+# COPY vendors/local/libgexiv2.so /usr/lib/x86_64-linux-gnu
 
 # CMD informant api -c /opt/configs/dev.toml
